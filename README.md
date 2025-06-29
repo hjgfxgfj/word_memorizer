@@ -35,69 +35,34 @@
 
 ## 📦 安装和运行
 
-### 💾 直接下载可执行文件（最简单）
+### 💾 下载可执行文件（推荐）
 
-无需安装Python或Docker，直接下载运行：
+**🎯 最简单的使用方式：** 直接下载预编译的可执行文件，无需安装Python环境！
+
+#### 📥 最新版本下载 (v1.1.0)
 
 **Windows用户：**
-[📥 下载 WordMemorizer-Windows.zip](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-Windows.zip)
+- [📥 下载 WordMemorizer-Windows.zip](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-Windows.zip)
 - 解压后双击 `WordMemorizer.exe` 即可运行
 
 **macOS用户：**  
-[📥 下载 WordMemorizer-macOS.zip](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-macOS.zip)
-- 解压后双击 `WordMemorizer.app` 即可运行
+- [📥 下载 WordMemorizer-macOS.zip](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-macOS.zip)
+- 解压后运行 `./WordMemorizer`（推荐使用终端运行）
 - 首次运行可能需要在系统偏好设置→安全性中允许
 
 **Linux用户：**
-[📥 下载 WordMemorizer-Linux.tar.gz](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-Linux.tar.gz)
+- [📥 下载 WordMemorizer-Linux.tar.gz](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-Linux.tar.gz)
 - 解压后运行 `./WordMemorizer`
 
-> 💡 **提示**: 可执行文件包含所有依赖，无需额外安装任何软件！
+> 💡 **优势**: 
+> - ✅ 开箱即用，无需安装Python
+> - ✅ 包含所有依赖库
+> - ✅ 支持离线使用
+> - ✅ 文件体积小，启动快速
 
-### 🐳 Docker 部署（推荐给开发者）
+### 📦 查看所有版本
 
-最简单的使用方式，无需配置Python环境：
-
-**Windows用户：**
-```batch
-# 1. 安装并启动X11服务器 (VcXsrv/Xming)
-# 2. 克隆项目
-git clone https://github.com/BillWang-dev/word_memorizer.git
-cd word_memorizer
-
-# 3. 运行
-docker-run-windows.bat
-```
-
-**macOS用户：**
-```bash
-# 1. 安装并启动XQuartz
-# 2. 克隆项目  
-git clone https://github.com/BillWang-dev/word_memorizer.git
-cd word_memorizer
-
-# 3. 运行
-./docker-run.sh
-```
-
-**Linux用户：**
-```bash
-# 克隆项目
-git clone https://github.com/BillWang-dev/word_memorizer.git
-cd word_memorizer
-
-# 一键启动（自动处理GUI和音频支持）
-./docker-run.sh
-```
-
-**支持的运行环境：**
-- ✅ WSL2 + Docker Desktop（Windows最佳）
-- ✅ VMware/VirtualBox Linux虚拟机（跨平台）
-- ✅ Windows + VcXsrv X11服务器（原生）
-- ✅ macOS + XQuartz（原生）
-- ✅ Linux（原生）
-
-详细说明请查看 [DOCKER.md](DOCKER.md)
+访问 [GitHub Releases页面](https://github.com/BillWang-dev/word_memorizer/releases) 查看完整版本历史和更新日志。
 
 ### 💻 本地安装
 
