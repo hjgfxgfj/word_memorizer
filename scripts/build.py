@@ -124,8 +124,11 @@ APP = ['{MAIN_SCRIPT}']
 DATA_FILES = [('data', ['{ROOT_DIR}/data/words_cet6.csv'])]
 OPTIONS = {{
     'argv_emulation': True,
-    'packages': ['tkinter', 'matplotlib', 'PIL', 'pygame', 'sounddevice', 'edge_tts', 'pydub', 'sqlite3'],
-    'excludes': ['PyQt4', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6'],
+    'includes': ['tkinter', 'sqlite3'],
+    'packages': ['matplotlib', 'PIL', 'pygame', 'sounddevice', 'edge_tts', 'pydub', 'numpy', 'scipy'],
+    'excludes': ['PyQt4', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'PyInstaller', 'pytest'],
+    'resources': [],
+    'iconfile': None,
     'plist': {{
         'CFBundleName': '{PROJECT_NAME}',
         'CFBundleDisplayName': '{PROJECT_NAME}',
@@ -133,6 +136,7 @@ OPTIONS = {{
         'CFBundleVersion': '{VERSION}',
         'CFBundleShortVersionString': '{VERSION}',
         'NSHumanReadableCopyright': 'Copyright © 2024 {AUTHOR}',
+        'LSMinimumSystemVersion': '10.14.0',
     }}
 }}
 

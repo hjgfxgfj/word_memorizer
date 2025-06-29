@@ -59,7 +59,7 @@ jobs:
     - name: Build executable (macOS)
       if: matrix.platform == 'macos'
       run: |
-        python scripts/build.py --py2app
+        python scripts/build.py
 
     - name: Create portable package
       shell: bash
@@ -68,8 +68,6 @@ jobs:
         
         if [ "${{ matrix.platform }}" == "windows" ]; then
           cp dist/WordMemorizer.exe release/
-        elif [ "${{ matrix.platform }}" == "macos" ]; then
-          cp -r dist/WordMemorizer.app release/
         else
           cp dist/WordMemorizer release/
         fi
@@ -87,10 +85,9 @@ jobs:
         echo "## 运行方式" >> release/使用说明.txt
         if [ "${{ matrix.platform }}" == "windows" ]; then
           echo "双击 WordMemorizer.exe 启动程序" >> release/使用说明.txt
-        elif [ "${{ matrix.platform }}" == "macos" ]; then
-          echo "双击 WordMemorizer.app 启动程序" >> release/使用说明.txt
         else
           echo "在终端中运行: ./WordMemorizer" >> release/使用说明.txt
+          echo "或双击文件（如果系统支持）" >> release/使用说明.txt
         fi
         echo "" >> release/使用说明.txt
         echo "## 数据文件" >> release/使用说明.txt
