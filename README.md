@@ -61,7 +61,25 @@ docker-run-windows.bat
 - 确保防火墙允许X11服务器通过
 - 详细设置说明请查看 [WINDOWS-SETUP.md](WINDOWS-SETUP.md)
 
-**macOS/Linux用户：**
+**macOS用户：**
+```bash
+# 第一步：启动XQuartz (必需!)
+./start-xquartz.sh
+
+# 克隆项目
+git clone https://github.com/BillWang-dev/word_memorizer.git
+cd word_memorizer
+
+# 运行系统
+./docker-run.sh
+```
+
+**⚠️ macOS重要提醒：**
+- 必须先启动XQuartz并配置"允许来自网络客户端的连接"
+- 首次安装XQuartz后可能需要注销重新登录
+- 详细设置说明请查看 [MACOS-SETUP.md](MACOS-SETUP.md)
+
+**Linux用户：**
 ```bash
 # 克隆项目
 git clone https://github.com/BillWang-dev/word_memorizer.git
