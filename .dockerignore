@@ -41,6 +41,5 @@ cache/
 *.tmp
 temp/
 
-# 文档
-README.md
+# 文档（保留README.md供Docker使用）
 assets/

@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     libcairo-gobject2 \
     libpango-1.0-0 \
     libatk1.0-0 \
-    libcairo-cairo2 \
+    libcairo2 \
     libgdk-pixbuf2.0-0 \
     libgtk-3-0 \
     libgstreamer1.0-0 \

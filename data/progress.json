@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-06-29T12:13:55.562103",
+  "timestamp": "2025-06-29T12:14:34.649645",
   "words": {
     "abandon": {
       "word": "abandon",
@@ -102,11 +102,11 @@
       "meaning": "陪伴；伴随",
       "pronunciation": "/əˈkʌmpəni/",
       "difficulty": 2,
-      "review_count": 0,
+      "review_count": 1,
       "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422540",
-      "next_review": "2025-06-29T11:30:34.422541",
-      "easiness_factor": 2.5,
+      "last_review": "2025-06-29T12:14:27.279408",
+      "next_review": "2025-06-30T12:14:27.279448",
+      "easiness_factor": 1.96,
       "interval": 1
     },
     "accomplish": {
