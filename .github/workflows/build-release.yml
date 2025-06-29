@@ -1,0 +1,156 @@
+name: Build Multi-Platform Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 触发条件：推送版本标签如 v1.0.0
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            exe_suffix: .exe
+            artifact_name: WordMemorizer-Windows
+          - os: macos-latest
+            platform: macos
+            exe_suffix: .app
+            artifact_name: WordMemorizer-macOS
+          - os: ubuntu-latest
+            platform: linux
+            exe_suffix: ""
+            artifact_name: WordMemorizer-Linux
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install system dependencies (Ubuntu)
+      if: matrix.platform == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-tk portaudio19-dev libasound2-dev
+
+    - name: Install system dependencies (macOS)
+      if: matrix.platform == 'macos'
+      run: |
+        brew install portaudio
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-basic.txt
+
+    - name: Build executable (Windows/Linux)
+      if: matrix.platform != 'macos'
+      run: |
+        python scripts/build.py
+
+    - name: Build executable (macOS)
+      if: matrix.platform == 'macos'
+      run: |
+        python scripts/build.py --py2app
+
+    - name: Create portable package
+      shell: bash
+      run: |
+        mkdir -p release
+        
+        if [ "${{ matrix.platform }}" == "windows" ]; then
+          cp dist/WordMemorizer.exe release/
+        elif [ "${{ matrix.platform }}" == "macos" ]; then
+          cp -r dist/WordMemorizer.app release/
+        else
+          cp dist/WordMemorizer release/
+        fi
+        
+        # 复制必要文件
+        cp -r data release/
+        cp README.md release/
+        cp DOCKER.md release/
+        cp MACOS-SETUP.md release/
+        cp WINDOWS-SETUP.md release/
+        
+        # 创建启动说明
+        echo "# WordMemorizer 使用说明" > release/使用说明.txt
+        echo "" >> release/使用说明.txt
+        echo "## 运行方式" >> release/使用说明.txt
+        if [ "${{ matrix.platform }}" == "windows" ]; then
+          echo "双击 WordMemorizer.exe 启动程序" >> release/使用说明.txt
+        elif [ "${{ matrix.platform }}" == "macos" ]; then
+          echo "双击 WordMemorizer.app 启动程序" >> release/使用说明.txt
+        else
+          echo "在终端中运行: ./WordMemorizer" >> release/使用说明.txt
+        fi
+        echo "" >> release/使用说明.txt
+        echo "## 数据文件" >> release/使用说明.txt
+        echo "data/ 文件夹包含词汇数据和学习进度" >> release/使用说明.txt
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.artifact_name }}
+        path: release/
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Create release packages
+      run: |
+        # 创建压缩包
+        cd WordMemorizer-Windows && zip -r ../WordMemorizer-Windows.zip . && cd ..
+        cd WordMemorizer-macOS && zip -r ../WordMemorizer-macOS.zip . && cd ..
+        cd WordMemorizer-Linux && tar -czf ../WordMemorizer-Linux.tar.gz . && cd ..
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          WordMemorizer-Windows.zip
+          WordMemorizer-macOS.zip
+          WordMemorizer-Linux.tar.gz
+        body: |
+          ## 英语单词记忆系统 - 多平台发布版
+
+          ### 📦 下载说明
+          - **Windows用户**: 下载 `WordMemorizer-Windows.zip`，解压后双击 `WordMemorizer.exe`
+          - **macOS用户**: 下载 `WordMemorizer-macOS.zip`，解压后双击 `WordMemorizer.app`  
+          - **Linux用户**: 下载 `WordMemorizer-Linux.tar.gz`，解压后运行 `./WordMemorizer`
+
+          ### ✨ 主要功能
+          - 🔊 TTS语音播放
+          - ✏️ 手动输入练习
+          - 🤖 AI词汇释义
+          - 📊 学习统计图表
+          - 🧠 智能复习算法
+
+          ### 📋 系统要求
+          - **Windows**: Windows 10+ 
+          - **macOS**: macOS 10.14+
+          - **Linux**: Ubuntu 18.04+ 或同等发行版
+
+          无需安装Python环境，开箱即用！
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -35,7 +35,26 @@
 
 ## 📦 安装和运行
 
-### 🐳 Docker 部署（推荐）
+### 💾 直接下载可执行文件（最简单）
+
+无需安装Python或Docker，直接下载运行：
+
+**Windows用户：**
+[📥 下载 WordMemorizer-Windows.zip](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-Windows.zip)
+- 解压后双击 `WordMemorizer.exe` 即可运行
+
+**macOS用户：**  
+[📥 下载 WordMemorizer-macOS.zip](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-macOS.zip)
+- 解压后双击 `WordMemorizer.app` 即可运行
+- 首次运行可能需要在系统偏好设置→安全性中允许
+
+**Linux用户：**
+[📥 下载 WordMemorizer-Linux.tar.gz](https://github.com/BillWang-dev/word_memorizer/releases/latest/download/WordMemorizer-Linux.tar.gz)
+- 解压后运行 `./WordMemorizer`
+
+> 💡 **提示**: 可执行文件包含所有依赖，无需额外安装任何软件！
+
+### 🐳 Docker 部署（推荐给开发者）
 
 最简单的使用方式，无需配置Python环境：
 
