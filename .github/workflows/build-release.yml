@@ -98,7 +98,8 @@ jobs:
         
         # 创建压缩包
         if [ "${{ matrix.platform }}" == "windows" ]; then
-          cd release && zip -r ../WordMemorizer-Windows.zip . && cd ..
+          # Windows: 使用PowerShell的Compress-Archive
+          powershell -Command "Compress-Archive -Path release/* -DestinationPath WordMemorizer-Windows.zip"
           cp WordMemorizer-Windows.zip release/
         elif [ "${{ matrix.platform }}" == "linux" ]; then
           cd release && tar -czf ../WordMemorizer-Linux.tar.gz . && cd ..
