@@ -1,115 +1,241 @@
-![](assets/img/screenshot.png)
-# 英语闪卡背单词程序 (English Flashcard Memorizer)
+# 英语听写与词汇记忆系统 (Word & Sentence Memorizer)
 
-这是一个使用 Python 和 Tkinter 构建的桌面应用程序，旨在帮助用户通过闪卡（Flashcard）的形式记忆英语单词。程序会跟踪用户的学习进度，并优先复习用户不熟悉的单词。
+一个基于Python开发的智能英语学习系统，集成了听写练习、AI释义、语音识别和学习统计等功能。
 
+## ✨ 主要特性
 
-## ✨ 主要功能
-
-- **闪卡式学习**：一次只显示一个单词，用户可以主动回忆释义。
-- **进度跟踪**：程序会区分“已掌握”和“待复习”的单词。
-- **智能复习**：标记为“不认识”的单词会稍后再次出现，加强记忆。
-- **自动保存**：退出程序时，学习进度会自动保存，下次启动时无缝衔接。
-- **自定义词库**：通过简单的 CSV 文件轻松添加和管理自己的单词列表。
-- **跨平台运行**：基于 Python 和 Tkinter，可在 Windows, macOS, Linux 上运行。
-
-## 🚀 快速开始
-
-### 准备环境
-
-1.  **安装 Python**
-    确保你的电脑上安装了 Python 3.8 或更高版本。你可以从 [python.org](https://www.python.org/downloads/) 下载。
-
-2.  **安装 Tkinter 支持 (仅针对部分系统)**
-    - **Windows**: 通常随 Python 安装包一同安装，无需额外操作。
-    - **macOS**: 如果你使用 Homebrew 安装的 Python，请确保已安装 `tcl-tk`。
-      ```bash
-      brew install tcl-tk
-      brew reinstall python
-      ```
-    - **Debian/Ubuntu Linux**:
-      ```bash
-      sudo apt-get update
-      sudo apt-get install python3-tk
-      ```
-
-### 安装与运行 (推荐使用虚拟环境)
-
-1.  **克隆或下载项目**
-    将本项目代码下载到你的本地计算机，并进入项目根目录。
-    ```bash
-    git clone https://github.com/BillWang-dev/word_memorizer
-    cd word_memorizer
-    ```
-
-2.  **创建并激活虚拟环境**
-    在项目根目录下创建一个独立的 Python 环境，这可以避免与系统库产生冲突。
-
-    *   **在 macOS / Linux 上:**
-        ```bash
-        python3 -m venv venv
-        source venv/bin/activate
-        ```
-
-    *   **在 Windows 上:**
-        ```bash
-        python -m venv venv
-        .\venv\Scripts\activate
-        ```
-    激活成功后，你的终端提示符前会出现 `(venv)`。
-
-3.  **准备词库**
-    在项目根目录下，创建一个名为 `words.csv` 的文件。这是一个逗号分隔的文件，用于存放你的单词。格式如下：
-
-    ```csv
-    word,meaning
-    ubiquitous,"present, appearing, or found everywhere"
-    ephemeral,"lasting for a very short time"
-    serendipity,"the occurrence and development of events by chance in a happy or beneficial way"
-    ```
-    > **提示**: 如果单词释义中包含逗号，请用英文双引号 `"` 将其括起来。
-
-4.  **运行程序**
-    现在，在已激活的虚拟环境中，运行以下命令来启动程序：
-
-    ```bash
-    python word_memorizer.py
-    ```
-    程序窗口将会启动。
-
-5.  **退出**
-    当你完成使用后，可以在终端中输入以下命令来退出虚拟环境：
-    ```bash
-    deactivate
-    ```
-
-## 📖 如何使用
-
-1.  程序启动后，会显示一个单词。
-2.  自己先回忆一下单词的释义。
-3.  点击 **“显示释义”** 按钮查看正确答案。
-4.  根据你的掌握情况，点击：
-    - **“我认识”**: 该单词将被标记为已掌握，短期内不会再出现。
-    - **“不认识”**: 该单词会被放回复习队列的末尾，稍后会再次出现让你复习。
-5.  当所有单词都标记为“我认识”后，本轮学习结束。
-6.  关闭窗口时，程序会提示保存进度。下次启动时将从未掌握的单词开始。
+- 📝 **智能听写**: 支持单词和句子的语音听写练习
+- 🤖 **AI释义**: 集成Deepseek API，提供详细的词汇解释和例句
+- 🔊 **离线TTS**: 使用edge-tts实现高质量语音合成
+- 🎤 **语音识别**: 支持录音识别，自动转换为文本
+- 📊 **学习统计**: 可视化学习进度和统计分析
+- 🧠 **智能复习**: 基于SM-2算法的间隔重复学习
+- 💾 **数据缓存**: 智能缓存音频和AI释义，提升响应速度
 
 ## 🛠️ 技术栈
 
-- **语言**: Python 3
-- **GUI 框架**: Tkinter (Python 标准库)
-- **数据格式**: CSV (用于词库), JSON (用于保存进度)
+- **GUI框架**: Tkinter + sv-ttk (现代主题)
+- **音频处理**: edge-tts, sounddevice, pygame, pydub
+- **语音识别**: SpeechRecognition
+- **AI接口**: Deepseek API
+- **数据可视化**: Matplotlib
+- **数据存储**: SQLite, JSON, CSV
+- **算法**: SM-2间隔重复算法
 
-## 🔮 未来可以扩展的功能
+## 📦 安装和运行
 
-这个项目可以作为一个很好的起点，进行功能扩展：
+### 环境要求
 
-- [ ] **艾宾浩斯记忆曲线**：引入更科学的复习间隔算法。
-- [ ] **听写模式**：集成文本到语音（TTS）功能，进行拼写练习。
-- [ ] **多词库管理**：支持创建和切换不同的单词本。
-- [ ] **学习统计**：使用图表展示每日学习量和掌握度曲线。
-- [ ] **更美观的 UI**：使用 `ttkbootstrap` 或 PyQt/PySide6 重构界面。
+- Python 3.8+
+- 操作系统: Windows 10+, macOS 10.14+, Ubuntu 18.04+
+
+### 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 运行程序
+
+```bash
+python ui/main.py
+```
+
+### 构建可执行文件
+
+```bash
+# 所有平台 (PyInstaller)
+python scripts/build.py
+
+# macOS (py2app)
+python scripts/build.py --py2app
+```
+
+## 📚 使用说明
+
+### 1. 单词听写
+
+1. 点击"单词听写"标签页
+2. 点击"播放"按钮听取单词发音
+3. 使用录音功能或手动输入答案
+4. 点击"提交答案"查看结果
+5. 可点击"AI释义"获取详细解释
+
+### 2. 句子听写
+
+1. 切换到"句子听写"标签页
+2. 播放句子音频
+3. 通过录音或输入完成听写
+4. 系统会自动比较答案准确度
+
+### 3. 学习统计
+
+- 查看总体学习进度
+- 分析每日学习数据
+- 导出学习报告
+
+### 4. 自定义词书
+
+- 支持导入CSV格式的单词文件
+- 支持导入JSON格式的句子文件
+- 文件格式参考`data/`目录下的示例
+
+## 📁 项目结构
+
+```
+WordMemorizer/
+├── logic/              # 核心逻辑模块
+│   ├── core.py        # 词汇管理和复习调度
+│   └── ai.py          # AI释义和缓存
+├── audio/              # 音频处理模块
+│   └── listen.py      # TTS、录音和识别
+├── ui/                 # 用户界面
+│   └── main.py        # 主界面和交互
+├── data/               # 数据文件
+│   ├── words_cet6.csv # 示例词汇
+│   └── sentences_500.json # 示例句子
+├── scripts/            # 构建脚本
+│   └── build.py       # 打包脚本
+├── tests/              # 单元测试
+└── requirements.txt    # 依赖列表
+```
+
+## 🔧 配置说明
+
+### AI API配置
+
+在`logic/ai.py`中修改以下配置：
+
+```python
+self.api_key = "your-deepseek-api-key-here"  # 替换为你的API密钥
+```
+
+### 数据文件格式
+
+**单词CSV格式** (`words_cet6.csv`):
+```csv
+word,meaning,pronunciation,difficulty
+abandon,放弃；抛弃,/əˈbændən/,2
+```
+
+**句子JSON格式** (`sentences_500.json`):
+```json
+[
+  {
+    "sentence": "The quick brown fox jumps over the lazy dog.",
+    "translation": "敏捷的棕色狐狸跳过懒惰的狗。",
+    "difficulty": 1
+  }
+]
+```
+
+## 📊 算法说明
+
+### SM-2间隔重复算法
+
+系统采用改进的SM-2算法来安排复习时间：
+
+- **易度因子**: 根据回答质量动态调整
+- **复习间隔**: 1天 → 6天 → 14天 → 递增
+- **错误处理**: 答错时重置间隔，重新开始
+
+### 文本相似度计算
+
+使用词汇匹配度来评估听写准确性：
+- 80%以上相似度认为正确
+- 支持部分匹配和容错
+
+## 🧪 测试
+
+运行单元测试：
+
+```bash
+python run_tests.py
+```
+
+运行特定模块测试：
+
+```bash
+# 测试核心逻辑
+python run_tests.py core
+
+# 测试AI模块
+python run_tests.py ai
+
+# 测试音频模块
+python run_tests.py audio
+```
+
+## 📈 性能优化
+
+- **音频缓存**: 避免重复TTS生成
+- **AI缓存**: 减少API调用次数  
+- **异步处理**: 提升用户体验
+- **内存管理**: 智能清理过期缓存
+
+## 🔍 故障排除
+
+### 常见问题
+
+1. **音频播放失败**
+   - 检查系统音频设备
+   - 确认pygame正确安装
+
+2. **语音识别不准确**
+   - 调整麦克风音量
+   - 在安静环境中录音
+
+3. **AI释义失败**
+   - 检查网络连接
+   - 验证API密钥配置
+
+4. **依赖安装失败**
+   - 更新pip版本
+   - 使用虚拟环境
+
+## 📊 开发统计
+
+- **总代码量**: ~1300行
+- **核心模块**: 450行 (logic/)
+- **音频引擎**: 350行 (audio/)
+- **GUI界面**: 400行 (ui/)
+- **测试覆盖**: 400行 (tests/)
 
 ## 📄 许可证
 
-本项目采用 [MIT 许可证](LICENSE)。
+本项目为Python课程设计作品，仅供学习和教育用途使用。
+
+## 👥 开发团队
+
+- **核心逻辑**: 词汇管理、复习调度、AI接口
+- **音频引擎**: TTS合成、语音识别、音频处理
+- **用户界面**: GUI设计、交互逻辑、数据可视化
+
+## 🔗 相关链接
+
+- [Deepseek API文档](https://platform.deepseek.com/docs)
+- [edge-tts项目](https://github.com/rany2/edge-tts)
+- [SpeechRecognition库](https://pypi.org/project/SpeechRecognition/)
+
+## 🚀 快速开始
+
+```bash
+# 克隆项目
+git clone https://github.com/BillWang-dev/word_memorizer.git
+cd word_memorizer
+
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 运行程序
+python ui/main.py
+```
+
+---
+
+**注意**: 使用前请确保已正确配置所有依赖和API密钥。如遇问题请参考故障排除部分或提交Issue。
