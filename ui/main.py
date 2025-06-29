@@ -26,9 +26,14 @@ import logging
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+import matplotlib.font_manager as fm
 import numpy as np
 from PIL import Image, ImageTk
 import sv_ttk  # Sun Valley theme for modern look
+
+# 配置matplotlib中文字体支持
+plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'DejaVu Sans', 'Arial']
+plt.rcParams['axes.unicode_minus'] = False
 
 # Local imports
 import sys
@@ -224,7 +229,39 @@ class StatisticsPanel:
         self.core = core
         self.figure = None
         self.canvas = None
+        self._setup_fonts()
         self._create_widgets()
+    
+    def _setup_fonts(self):
+        """设置中文字体支持"""
+        try:
+            # 尝试查找系统中可用的中文字体
+            available_fonts = [f.name for f in fm.fontManager.ttflist]
+            
+            # 优先选择的中文字体列表
+            chinese_fonts = [
+                'PingFang SC', 'Hiragino Sans GB', 'STHeiti', 'SimHei', 
+                'Microsoft YaHei', 'Arial Unicode MS', 'Noto Sans CJK'
+            ]
+            
+            # 找到第一个可用的中文字体
+            selected_font = 'DejaVu Sans'  # 默认字体
+            for font in chinese_fonts:
+                if font in available_fonts:
+                    selected_font = font
+                    break
+            
+            # 设置matplotlib字体
+            plt.rcParams['font.sans-serif'] = [selected_font, 'DejaVu Sans', 'Arial']
+            plt.rcParams['axes.unicode_minus'] = False
+            
+            logger.info(f"字体设置成功: {selected_font}")
+            
+        except Exception as e:
+            logger.warning(f"字体设置失败: {e}")
+            # 使用默认设置
+            plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial']
+            plt.rcParams['axes.unicode_minus'] = False
     
     def _create_widgets(self):
         """创建统计面板组件"""
@@ -332,14 +369,14 @@ class StatisticsPanel:
         """创建单词统计柱状图"""
         words = stats.get('words', {})
         
-        categories = ['总数', '已复习', '正确率']
+        categories = ['Total', 'Reviewed', 'Accuracy%']
         word_values = [words.get('total', 0), words.get('reviewed', 0), words.get('accuracy', 0)]
         
         x = np.arange(len(categories))
         
         ax.bar(x, word_values, color='skyblue', alpha=0.8)
         
-        ax.set_title('单词学习统计')
+        ax.set_title('Word Learning Statistics')
         ax.set_xticks(x)
         ax.set_xticklabels(categories)
         ax.grid(True, alpha=0.3)
@@ -360,16 +397,16 @@ class StatisticsPanel:
             correct_count = int(word_reviewed * word_accuracy / 100)
             incorrect_count = word_reviewed - correct_count
             
-            labels = ['正确', '错误']
+            labels = ['Correct', 'Incorrect']
             sizes = [correct_count, incorrect_count]
             colors = ['lightgreen', 'lightcoral']
             
             ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-            ax.set_title(f'单词学习正确率 ({word_accuracy:.1f}%)')
+            ax.set_title(f'Word Accuracy ({word_accuracy:.1f}%)')
         else:
-            ax.text(0.5, 0.5, '暂无学习数据', ha='center', va='center', 
+            ax.text(0.5, 0.5, 'No learning data yet', ha='center', va='center', 
                    transform=ax.transAxes, fontsize=12)
-            ax.set_title('单词学习正确率')
+            ax.set_title('Word Accuracy')
     
     def _create_daily_word_progress_chart(self, ax, stats: Dict):
         """创建每日单词学习进度折线图"""
@@ -382,9 +419,9 @@ class StatisticsPanel:
             ax.plot(dates, word_counts, marker='o', linewidth=2, color='blue', 
                    markersize=6, markerfacecolor='lightblue')
             
-            ax.set_title('每日单词学习进度 (最近14天)')
-            ax.set_xlabel('日期')
-            ax.set_ylabel('单词复习数量')
+            ax.set_title('Daily Word Learning Progress (Last 14 Days)')
+            ax.set_xlabel('Date')
+            ax.set_ylabel('Words Reviewed')
             ax.grid(True, alpha=0.3)
             
             # 填充区域
@@ -393,9 +430,9 @@ class StatisticsPanel:
             # 旋转x轴标签
             plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
         else:
-            ax.text(0.5, 0.5, '暂无单词学习记录', ha='center', va='center', 
+            ax.text(0.5, 0.5, 'No word learning records yet', ha='center', va='center', 
                    transform=ax.transAxes, fontsize=12)
-            ax.set_title('每日单词学习进度')
+            ax.set_title('Daily Word Learning Progress')
     
     def export_report(self):
         """导出统计报告"""
