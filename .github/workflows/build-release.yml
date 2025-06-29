@@ -141,7 +141,7 @@ jobs:
 
           ### 📦 下载说明
           - **Windows用户**: 下载 `WordMemorizer-Windows.zip`，解压后双击 `WordMemorizer.exe`
-          - **macOS用户**: 下载 `WordMemorizer-macOS.zip`，解压后双击 `WordMemorizer.app`  
+          - **macOS用户**: 下载 `WordMemorizer-macOS.zip`，解压后运行 `./WordMemorizer` 或双击 `WordMemorizer.app`  
           - **Linux用户**: 下载 `WordMemorizer-Linux.tar.gz`，解压后运行 `./WordMemorizer`
 
           ### ✨ 主要功能
@@ -159,5 +159,4 @@ jobs:
           无需安装Python环境，开箱即用！
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
