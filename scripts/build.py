@@ -94,6 +94,16 @@ def build_with_pyinstaller():
         "--hidden-import", "edge_tts",
         "--hidden-import", "pydub",
         "--hidden-import", "sqlite3",
+        "--hidden-import", "scipy",
+        "--hidden-import", "scipy.io",
+        "--hidden-import", "scipy.io.wavfile",
+        "--hidden-import", "scipy._cyutility",
+        "--hidden-import", "scipy.sparse.csgraph._validation",
+        "--hidden-import", "scipy.sparse._matrix",
+        "--hidden-import", "scipy.sparse._csparsetools",
+        "--hidden-import", "numpy",
+        "--hidden-import", "numpy.core._methods",
+        "--hidden-import", "numpy.lib.format",
         str(MAIN_SCRIPT)
     ]
     
