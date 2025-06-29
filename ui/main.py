@@ -544,7 +544,10 @@ class DictationInterface:
         self.result_text.config(state=tk.NORMAL)
         self.result_text.delete(1.0, tk.END)
         self.result_text.config(state=tk.DISABLED)
-        self.submit_button.config(state=tk.NORMAL)
+        # 重置按钮文本和状态
+        self.submit_button.config(text="✅ 提交答案", state=tk.NORMAL)
+        # 隐藏结果区域（可选）
+        # self.result_frame.pack_forget()
     
     def _display_current_item(self):
         """显示当前项目"""
@@ -597,9 +600,6 @@ class DictationInterface:
     
     def _submit_answer(self):
         """提交答案"""
-        if self.answer_submitted:
-            return
-        
         # 获取用户输入的答案
         user_answer = self.answer_input.get(1.0, tk.END).strip()
         
@@ -607,36 +607,86 @@ class DictationInterface:
             messagebox.showwarning("提示", "请输入您听到的内容")
             return
         
-        # 比较答案
-        if isinstance(self.current_item, WordItem):
-            correct_answer = self.current_item.word
-        else:
-            correct_answer = self.current_item.sentence
-        
-        comparison_result = self.listen_engine.compare_texts(correct_answer, user_answer)
-        is_correct = comparison_result['is_correct']
-        
-        # 更新学习状态
-        self.core.submit_answer(self.current_item, is_correct)
-        
-        # 显示结果
-        self._display_result(comparison_result, correct_answer, user_answer)
-        
-        self.answer_submitted = True
-        self.submit_button.config(state=tk.DISABLED)
+        try:
+            # 比较答案
+            if isinstance(self.current_item, WordItem):
+                correct_answer = self.current_item.word
+            else:
+                correct_answer = self.current_item.sentence
+            
+            comparison_result = self.listen_engine.compare_texts(correct_answer, user_answer)
+            is_correct = comparison_result['is_correct']
+            
+            # 只在第一次提交时更新学习状态
+            if not self.answer_submitted:
+                self.core.submit_answer(self.current_item, is_correct)
+                self.answer_submitted = True
+            
+            # 显示结果
+            self._display_result(comparison_result, correct_answer, user_answer)
+            
+            # 更新按钮文本提示用户可以重新尝试
+            if is_correct:
+                self.submit_button.config(text="✅ 正确！再试一次", state=tk.NORMAL)
+            else:
+                self.submit_button.config(text="❌ 再试一次", state=tk.NORMAL)
+                
+        except Exception as e:
+            logger.error(f"提交答案时发生错误: {e}")
+            messagebox.showerror("错误", f"提交答案时发生错误: {str(e)}")
+            # 显示基本的错误信息
+            self._display_simple_result(correct_answer, user_answer)
     
     def _display_result(self, comparison: Dict, correct: str, user_answer: str):
         """显示结果"""
-        self.result_text.config(state=tk.NORMAL)
-        self.result_text.delete(1.0, tk.END)
-        
-        result_text = f"{'✅ 正确' if comparison['is_correct'] else '❌ 错误'}\n"
-        result_text += f"正确答案: {correct}\n"
-        result_text += f"你的答案: {user_answer}\n"
-        result_text += f"相似度: {comparison['similarity']:.1f}%"
-        
-        self.result_text.insert(1.0, result_text)
-        self.result_text.config(state=tk.DISABLED)
+        try:
+            self.result_text.config(state=tk.NORMAL)
+            self.result_text.delete(1.0, tk.END)
+            
+            # 构建结果文本
+            is_correct = comparison.get('is_correct', False)
+            similarity = comparison.get('similarity', 0.0)
+            
+            result_text = f"{'🎉 正确！' if is_correct else '❌ 错误'}\n"
+            result_text += f"正确答案: {correct}\n"
+            result_text += f"你的答案: {user_answer}\n"
+            result_text += f"相似度: {similarity:.1f}%\n"
+            
+            if is_correct:
+                result_text += "✨ 做得很好！继续加油！"
+            else:
+                result_text += "💪 再试一次，你可以的！"
+            
+            self.result_text.insert(1.0, result_text)
+            self.result_text.config(state=tk.DISABLED)
+            
+            # 确保结果区域可见
+            self.result_frame.pack(fill=tk.X, pady=(10, 0))
+            
+        except Exception as e:
+            logger.error(f"显示结果时发生错误: {e}")
+            self._display_simple_result(correct, user_answer)
+    
+    def _display_simple_result(self, correct: str, user_answer: str):
+        """显示简单的结果（当出现异常时使用）"""
+        try:
+            self.result_text.config(state=tk.NORMAL)
+            self.result_text.delete(1.0, tk.END)
+            
+            # 简单比较
+            is_match = correct.lower().strip() == user_answer.lower().strip()
+            
+            result_text = f"{'✅ 正确' if is_match else '❌ 错误'}\n"
+            result_text += f"正确答案: {correct}\n"
+            result_text += f"你的答案: {user_answer}\n"
+            result_text += "（简单比较模式）"
+            
+            self.result_text.insert(1.0, result_text)
+            self.result_text.config(state=tk.DISABLED)
+            
+        except Exception as e:
+            logger.error(f"显示简单结果时也发生错误: {e}")
+            messagebox.showinfo("结果", f"正确答案: {correct}\n你的答案: {user_answer}")
     
     def _show_ai_explanation(self):
         """显示AI释义"""
