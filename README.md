@@ -1,9 +1,8 @@
+![](assets/img/screenshot.png)
 # 英语闪卡背单词程序 (English Flashcard Memorizer)
 
 这是一个使用 Python 和 Tkinter 构建的桌面应用程序，旨在帮助用户通过闪卡（Flashcard）的形式记忆英语单词。程序会跟踪用户的学习进度，并优先复习用户不熟悉的单词。
 
-  
-*(你可以用你自己程序的截图替换这张图片链接)*
 
 ## ✨ 主要功能
 
