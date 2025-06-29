@@ -72,20 +72,27 @@ def build_with_pyinstaller():
     """使用PyInstaller构建"""
     print("🔨 Building with PyInstaller...")
     
+    # 根据平台选择路径分隔符
+    current_platform = platform.system().lower()
+    if current_platform == "windows":
+        data_separator = ";"
+    else:
+        data_separator = ":"
+    
     # PyInstaller command
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--name", PROJECT_NAME,
         "--onefile",  # Single executable file
         "--windowed",  # No console window
-        "--add-data", f"{ROOT_DIR}/data;data",  # Include data files
+        "--add-data", f"{ROOT_DIR}/data{data_separator}data",  # Include data files
         "--hidden-import", "tkinter",
         "--hidden-import", "matplotlib",
         "--hidden-import", "PIL",
         "--hidden-import", "pygame",
         "--hidden-import", "sounddevice",
         "--hidden-import", "edge_tts",
-        "--hidden-import", "speech_recognition",
+        "--hidden-import", "pydub",
         "--hidden-import", "sqlite3",
         str(MAIN_SCRIPT)
     ]
@@ -114,10 +121,10 @@ from setuptools import setup
 import py2app
 
 APP = ['{MAIN_SCRIPT}']
-DATA_FILES = [('data', ['{ROOT_DIR}/data/words_cet6.csv', '{ROOT_DIR}/data/sentences_500.json'])]
+DATA_FILES = [('data', ['{ROOT_DIR}/data/words_cet6.csv'])]
 OPTIONS = {{
     'argv_emulation': True,
-    'packages': ['tkinter', 'matplotlib', 'PIL', 'pygame', 'sounddevice', 'edge_tts', 'speech_recognition', 'sqlite3'],
+    'packages': ['tkinter', 'matplotlib', 'PIL', 'pygame', 'sounddevice', 'edge_tts', 'pydub', 'sqlite3'],
     'excludes': ['PyQt4', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6'],
     'plist': {{
         'CFBundleName': '{PROJECT_NAME}',
