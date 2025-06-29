@@ -32,7 +32,7 @@ MAIN_SCRIPT = ROOT_DIR / "ui" / "main.py"
 
 def clean_build_dirs():
     """清理构建目录"""
-    print("🧹 Cleaning build directories...")
+    print("Cleaning build directories...")
     
     dirs_to_clean = [DIST_DIR, BUILD_DIR]
     for dir_path in dirs_to_clean:
@@ -40,12 +40,12 @@ def clean_build_dirs():
             shutil.rmtree(dir_path)
             print(f"   Removed: {dir_path}")
     
-    print("✅ Build directories cleaned")
+    print("Build directories cleaned")
 
 
 def install_dependencies():
     """安装构建依赖"""
-    print("📦 Installing build dependencies...")
+    print("Installing build dependencies...")
     
     current_platform = platform.system().lower()
     
@@ -60,9 +60,9 @@ def install_dependencies():
         try:
             subprocess.run([sys.executable, "-m", "pip", "install", dep], 
                          check=True, capture_output=True)
-            print(f"   ✅ Installed: {dep}")
+            print(f"   Installed: {dep}")
         except subprocess.CalledProcessError as e:
-            print(f"   ❌ Failed to install {dep}: {e}")
+            print(f"   Failed to install {dep}: {e}")
             return False
     
     return True
@@ -70,7 +70,7 @@ def install_dependencies():
 
 def build_with_pyinstaller():
     """使用PyInstaller构建"""
-    print("🔨 Building with PyInstaller...")
+    print("Building with PyInstaller...")
     
     # 根据平台选择路径分隔符
     current_platform = platform.system().lower()
@@ -103,17 +103,17 @@ def build_with_pyinstaller():
         
         # Run PyInstaller
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        print("   ✅ PyInstaller build completed")
+        print("   PyInstaller build completed")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"   ❌ PyInstaller build failed: {e}")
+        print(f"   PyInstaller build failed: {e}")
         print(f"   Error output: {e.stderr}")
         return False
 
 
 def build_with_py2app():
     """使用py2app构建macOS应用"""
-    print("🍎 Building macOS app with py2app...")
+    print("Building macOS app with py2app...")
     
     # Create setup.py for py2app
     setup_py_content = f'''
@@ -162,14 +162,14 @@ setup(
         cmd = [sys.executable, "setup.py", "py2app"]
         result = subprocess.run(cmd, check=True, capture_output=True, text=True)
         
-        print("   ✅ py2app build completed")
+        print("   py2app build completed")
         
         # Clean up setup.py
         setup_py_path.unlink()
         
         return True
     except subprocess.CalledProcessError as e:
-        print(f"   ❌ py2app build failed: {e}")
+        print(f"   py2app build failed: {e}")
         print(f"   Error output: {e.stderr}")
         return False
     finally:
@@ -180,7 +180,7 @@ setup(
 
 def create_installer_info():
     """创建安装信息文件"""
-    print("📄 Creating installer info...")
+    print("Creating installer info...")
     
     info = {
         "name": PROJECT_NAME,
@@ -197,16 +197,16 @@ def create_installer_info():
     with open(info_file, 'w', encoding='utf-8') as f:
         json.dump(info, f, indent=2, ensure_ascii=False)
     
-    print(f"   ✅ Build info saved to: {info_file}")
+    print(f"   Build info saved to: {info_file}")
 
 
 def copy_additional_files():
     """复制额外文件到分发目录"""
-    print("📋 Copying additional files...")
+    print("Copying additional files...")
     
     files_to_copy = [
         (ROOT_DIR / "README.md", "README.md"),
-        (ROOT_DIR / "requirements.txt", "requirements.txt"),
+        (ROOT_DIR / "requirements-basic.txt", "requirements.txt"),
         (ROOT_DIR / "data", "data"),
     ]
     
@@ -217,42 +217,42 @@ def copy_additional_files():
                 shutil.copytree(src, dst, dirs_exist_ok=True)
             else:
                 shutil.copy2(src, dst)
-            print(f"   ✅ Copied: {src.name}")
+            print(f"   Copied: {src.name}")
 
 
 def show_build_summary():
     """显示构建摘要"""
     print("\n" + "="*50)
-    print("🎉 BUILD SUMMARY")
+    print("BUILD SUMMARY")
     print("="*50)
     
     if DIST_DIR.exists():
-        print(f"📁 Distribution directory: {DIST_DIR}")
-        print("📦 Generated files:")
+        print(f"Distribution directory: {DIST_DIR}")
+        print("Generated files:")
         
         for item in DIST_DIR.iterdir():
             if item.is_file():
                 size = item.stat().st_size / (1024 * 1024)  # MB
-                print(f"   📄 {item.name} ({size:.1f} MB)")
+                print(f"   {item.name} ({size:.1f} MB)")
             elif item.is_dir():
-                print(f"   📁 {item.name}/")
+                print(f"   {item.name}/")
         
         current_platform = platform.system().lower()
         if current_platform == "windows":
-            print(f"\n🖥️  Run: {DIST_DIR / (PROJECT_NAME + '.exe')}")
+            print(f"\nRun: {DIST_DIR / (PROJECT_NAME + '.exe')}")
         elif current_platform == "darwin":
-            print(f"\n🍎 Run: open {DIST_DIR / (PROJECT_NAME + '.app')}")
+            print(f"\nRun: {DIST_DIR / PROJECT_NAME}")
         else:
-            print(f"\n🐧 Run: {DIST_DIR / PROJECT_NAME}")
+            print(f"\nRun: {DIST_DIR / PROJECT_NAME}")
     else:
-        print("❌ No distribution files found!")
+        print("No distribution files found!")
 
 
 def main():
     """主构建函数"""
-    print(f"🚀 Building {PROJECT_NAME} v{VERSION}")
-    print(f"🖥️  Platform: {platform.system()} {platform.machine()}")
-    print(f"🐍 Python: {platform.python_version()}")
+    print(f"Building {PROJECT_NAME} v{VERSION}")
+    print(f"Platform: {platform.system()} {platform.machine()}")
+    print(f"Python: {platform.python_version()}")
     print("-" * 50)
     
     # Step 1: Clean build directories
@@ -260,7 +260,7 @@ def main():
     
     # Step 2: Install build dependencies
     if not install_dependencies():
-        print("❌ Failed to install dependencies")
+        print("Failed to install dependencies")
         return 1
     
     # Step 3: Build based on platform
@@ -275,7 +275,7 @@ def main():
         build_success = build_with_pyinstaller()
     
     if not build_success:
-        print("❌ Build failed!")
+        print("Build failed!")
         return 1
     
     # Step 4: Create installer info
@@ -287,7 +287,7 @@ def main():
     # Step 6: Show summary
     show_build_summary()
     
-    print("\n✅ Build completed successfully!")
+    print("\nBuild completed successfully!")
     return 0
 
 

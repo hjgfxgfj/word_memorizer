@@ -19,12 +19,8 @@ jobs:
             artifact_name: WordMemorizer-Windows
           - os: macos-latest
             platform: macos
-            exe_suffix: .app
-            artifact_name: WordMemorizer-macOS
-          - os: ubuntu-latest
-            platform: linux
             exe_suffix: ""
-            artifact_name: WordMemorizer-Linux
+            artifact_name: WordMemorizer-macOS
 
     steps:
     - name: Checkout code
