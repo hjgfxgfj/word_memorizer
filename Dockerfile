@@ -49,8 +49,12 @@ COPY test_installation.py .
 COPY CLAUDE.md .
 COPY README.md .
 
-# 安装Python依赖
-RUN pip install --no-cache-dir -r requirements-basic.txt
+# 安装Python依赖 (分阶段安装以应对网络问题)
+RUN pip install --upgrade pip && \
+    pip install --timeout=300 --retries=3 numpy scipy && \
+    pip install --timeout=300 --retries=3 matplotlib Pillow && \
+    pip install --timeout=300 --retries=3 pandas && \
+    pip install --timeout=300 --retries=3 --no-cache-dir -r requirements-basic.txt
 
 # 创建非root用户
 RUN useradd -m -s /bin/bash worduser && \

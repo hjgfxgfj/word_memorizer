@@ -31,8 +31,14 @@ else
 fi
 
 # 构建Docker镜像
-echo "🔨 构建 Docker 镜像..."
-docker build -t word-memorizer .
+if [ "$1" = "minimal" ] || [ "$1" = "fast" ]; then
+    echo "🔨 构建 Docker 镜像 (最小化版本)..."
+    docker build -f Dockerfile.minimal -t word-memorizer .
+else
+    echo "🔨 构建 Docker 镜像 (完整版本)..."
+    echo "💡 提示: 使用 './docker-run.sh minimal' 进行快速构建"
+    docker build -t word-memorizer .
+fi
 
 if [ $? -ne 0 ]; then
     echo "❌ Docker 镜像构建失败"
