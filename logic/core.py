@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Core Logic Module for Word & Sentence Memorizer
-词汇记忆系统核心逻辑模块
+Core Logic Module for Word Memorizer
+单词记忆系统核心逻辑模块
 
 This module handles:
-- Word and sentence data management
+- Word data management
 - Review scheduling using simplified SM-2 algorithm
 - Data persistence with JSON format
 - Progress tracking and statistics
@@ -17,7 +17,7 @@ import heapq
 from collections import deque, Counter, defaultdict
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Union, Tuple
+from typing import Dict, List, Optional, Tuple
 from pathlib import Path
 import logging
 
@@ -46,24 +46,6 @@ class WordItem:
             self.next_review = datetime.now().isoformat()
 
 
-@dataclass
-class SentenceItem:
-    """句子数据结构"""
-    sentence: str
-    translation: str
-    difficulty: int = 1
-    review_count: int = 0
-    correct_count: int = 0
-    last_review: Optional[str] = None
-    next_review: Optional[str] = None
-    easiness_factor: float = 2.5
-    interval: int = 1
-    
-    def __post_init__(self):
-        if self.last_review is None:
-            self.last_review = datetime.now().isoformat()
-        if self.next_review is None:
-            self.next_review = datetime.now().isoformat()
 
 
 class ReviewScheduler:
@@ -71,10 +53,9 @@ class ReviewScheduler:
     
     def __init__(self):
         self.words_queue = deque()
-        self.sentences_queue = deque()
         self.review_heap = []  # 按复习时间排序的堆
         
-    def calculate_next_review(self, item: Union[WordItem, SentenceItem], 
+    def calculate_next_review(self, item: WordItem, 
                             quality: int) -> Tuple[int, float]:
         """
         计算下次复习时间和新的易度因子
@@ -98,7 +79,7 @@ class ReviewScheduler:
         
         return new_interval, new_ef
     
-    def update_item_after_review(self, item: Union[WordItem, SentenceItem], 
+    def update_item_after_review(self, item: WordItem, 
                                is_correct: bool, quality: int = None):
         """更新项目复习状态"""
         if quality is None:
@@ -120,7 +101,7 @@ class ReviewScheduler:
         heapq.heappush(self.review_heap, 
                       (next_review_date.timestamp(), item))
     
-    def get_due_items(self, item_type: str = "both") -> List[Union[WordItem, SentenceItem]]:
+    def get_due_items(self) -> List[WordItem]:
         """获取到期需要复习的项目"""
         due_items = []
         current_time = datetime.now().timestamp()
@@ -128,35 +109,26 @@ class ReviewScheduler:
         # 从堆中取出到期项目
         while self.review_heap and self.review_heap[0][0] <= current_time:
             _, item = heapq.heappop(self.review_heap)
-            if item_type == "both" or \
-               (item_type == "word" and isinstance(item, WordItem)) or \
-               (item_type == "sentence" and isinstance(item, SentenceItem)):
+            if isinstance(item, WordItem):
                 due_items.append(item)
         
         return due_items
     
-    def shuffle_queue(self, queue_type: str = "both"):
+    def shuffle_queue(self):
         """随机打乱队列顺序"""
-        if queue_type in ["both", "word"]:
-            queue_list = list(self.words_queue)
-            random.shuffle(queue_list)
-            self.words_queue = deque(queue_list)
-            
-        if queue_type in ["both", "sentence"]:
-            queue_list = list(self.sentences_queue)
-            random.shuffle(queue_list)
-            self.sentences_queue = deque(queue_list)
+        queue_list = list(self.words_queue)
+        random.shuffle(queue_list)
+        self.words_queue = deque(queue_list)
 
 
 class DataManager:
-    """数据管理器 - 处理词汇和句子的I/O操作"""
+    """数据管理器 - 处理词汇的I/O操作"""
     
     def __init__(self, data_dir: str = "data"):
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
         
         self.words: Dict[str, WordItem] = {}
-        self.sentences: Dict[str, SentenceItem] = {}
         self.progress_file = self.data_dir / "progress.json"
         
     def load_words_from_csv(self, csv_file: str) -> int:
@@ -185,38 +157,13 @@ class DataManager:
         logger.info(f"成功加载 {count} 个单词")
         return count
     
-    def load_sentences_from_json(self, json_file: str) -> int:
-        """从JSON文件加载句子"""
-        json_path = self.data_dir / json_file
-        if not json_path.exists():
-            logger.warning(f"JSON文件不存在: {json_path}")
-            return 0
-            
-        count = 0
-        try:
-            with open(json_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                for item in data:
-                    sentence_item = SentenceItem(
-                        sentence=item['sentence'],
-                        translation=item['translation'],
-                        difficulty=item.get('difficulty', 1)
-                    )
-                    self.sentences[sentence_item.sentence] = sentence_item
-                    count += 1
-        except Exception as e:
-            logger.error(f"加载JSON文件失败: {e}")
-            
-        logger.info(f"成功加载 {count} 个句子")
-        return count
     
     def save_progress(self) -> bool:
         """保存学习进度"""
         try:
             progress_data = {
                 'timestamp': datetime.now().isoformat(),
-                'words': {k: asdict(v) for k, v in self.words.items()},
-                'sentences': {k: asdict(v) for k, v in self.sentences.items()}
+                'words': {k: asdict(v) for k, v in self.words.items()}
             }
             
             with open(self.progress_file, 'w', encoding='utf-8') as f:
@@ -242,11 +189,7 @@ class DataManager:
             for word, word_data in data.get('words', {}).items():
                 self.words[word] = WordItem(**word_data)
                 
-            # 恢复句子数据
-            for sentence, sentence_data in data.get('sentences', {}).items():
-                self.sentences[sentence] = SentenceItem(**sentence_data)
-                
-            logger.info(f"成功加载进度: {len(self.words)}个单词, {len(self.sentences)}个句子")
+            logger.info(f"成功加载进度: {len(self.words)}个单词")
             return True
         except Exception as e:
             logger.error(f"加载进度失败: {e}")
@@ -255,7 +198,6 @@ class DataManager:
     def get_statistics(self) -> Dict:
         """获取学习统计信息"""
         word_stats = self._calculate_item_stats(self.words.values())
-        sentence_stats = self._calculate_item_stats(self.sentences.values())
         
         return {
             'words': {
@@ -263,12 +205,6 @@ class DataManager:
                 'reviewed': word_stats['reviewed'],
                 'accuracy': word_stats['accuracy'],
                 'avg_difficulty': word_stats['avg_difficulty']
-            },
-            'sentences': {
-                'total': len(self.sentences),
-                'reviewed': sentence_stats['reviewed'],
-                'accuracy': sentence_stats['accuracy'],
-                'avg_difficulty': sentence_stats['avg_difficulty']
             },
             'daily_progress': self._get_daily_progress()
         }
@@ -293,7 +229,7 @@ class DataManager:
     
     def _get_daily_progress(self) -> List[Dict]:
         """获取每日学习进度"""
-        daily_data = defaultdict(lambda: {'words': 0, 'sentences': 0})
+        daily_data = defaultdict(lambda: {'words': 0})
         
         # 统计单词复习记录
         for word_item in self.words.values():
@@ -301,43 +237,26 @@ class DataManager:
                 date = datetime.fromisoformat(word_item.last_review).date()
                 daily_data[date.isoformat()]['words'] += 1
         
-        # 统计句子复习记录
-        for sentence_item in self.sentences.values():
-            if sentence_item.last_review:
-                date = datetime.fromisoformat(sentence_item.last_review).date()
-                daily_data[date.isoformat()]['sentences'] += 1
-        
         # 转换为列表格式
         progress_list = []
         for date_str, counts in sorted(daily_data.items()):
             progress_list.append({
                 'date': date_str,
-                'words': counts['words'],
-                'sentences': counts['sentences']
+                'words': counts['words']
             })
         
         return progress_list[-30:]  # 返回最近30天的数据
     
-    def get_error_prone_items(self, item_type: str = "both", 
-                            limit: int = 10) -> List[Union[WordItem, SentenceItem]]:
+    def get_error_prone_items(self, limit: int = 10) -> List[WordItem]:
         """获取容易出错的项目"""
-        error_items = []
+        word_errors = [(item, self._calculate_error_rate(item)) 
+                      for item in self.words.values() if item.review_count > 0]
+        word_errors.sort(key=lambda x: x[1], reverse=True)
+        error_items = [item for item, _ in word_errors[:limit]]
         
-        if item_type in ["both", "word"]:
-            word_errors = [(item, self._calculate_error_rate(item)) 
-                          for item in self.words.values() if item.review_count > 0]
-            word_errors.sort(key=lambda x: x[1], reverse=True)
-            error_items.extend([item for item, _ in word_errors[:limit]])
-        
-        if item_type in ["both", "sentence"]:
-            sentence_errors = [(item, self._calculate_error_rate(item)) 
-                             for item in self.sentences.values() if item.review_count > 0]
-            sentence_errors.sort(key=lambda x: x[1], reverse=True)
-            error_items.extend([item for item, _ in sentence_errors[:limit]])
-        
-        return error_items[:limit]
+        return error_items
     
-    def _calculate_error_rate(self, item: Union[WordItem, SentenceItem]) -> float:
+    def _calculate_error_rate(self, item: WordItem) -> float:
         """计算错误率"""
         if item.review_count == 0:
             return 0.0
@@ -353,7 +272,6 @@ class MemorizerCore:
         self.current_session = {
             'start_time': datetime.now(),
             'words_reviewed': 0,
-            'sentences_reviewed': 0,
             'correct_answers': 0,
             'total_answers': 0
         }
@@ -363,7 +281,6 @@ class MemorizerCore:
         # 加载进度或创建示例数据
         if not self.data_manager.load_progress():
             self.data_manager.load_words_from_csv("words_cet6.csv")
-            self.data_manager.load_sentences_from_json("sentences_500.json")
         
         # 初始化复习队列
         self._initialize_review_queues()
@@ -382,38 +299,17 @@ class MemorizerCore:
                 heapq.heappush(self.scheduler.review_heap, 
                               (next_review.timestamp(), word))
         
-        for sentence in self.data_manager.sentences.values():
-            next_review = datetime.fromisoformat(sentence.next_review)
-            if next_review <= current_time:
-                self.scheduler.sentences_queue.append(sentence)
-            else:
-                heapq.heappush(self.scheduler.review_heap, 
-                              (next_review.timestamp(), sentence))
-        
         # 随机打乱队列
         self.scheduler.shuffle_queue()
     
-    def get_next_review_item(self, item_type: str = "both") -> Optional[Union[WordItem, SentenceItem]]:
+    def get_next_review_item(self, item_type: str = "word") -> Optional[WordItem]:
         """获取下一个复习项目"""
-        if item_type == "word" and self.scheduler.words_queue:
+        if self.scheduler.words_queue:
             return self.scheduler.words_queue.popleft()
-        elif item_type == "sentence" and self.scheduler.sentences_queue:
-            return self.scheduler.sentences_queue.popleft()
-        elif item_type == "both":
-            # 随机选择单词或句子
-            available_queues = []
-            if self.scheduler.words_queue:
-                available_queues.append(("word", self.scheduler.words_queue))
-            if self.scheduler.sentences_queue:
-                available_queues.append(("sentence", self.scheduler.sentences_queue))
-            
-            if available_queues:
-                queue_type, queue = random.choice(available_queues)
-                return queue.popleft()
         
         return None
     
-    def submit_answer(self, item: Union[WordItem, SentenceItem], 
+    def submit_answer(self, item: WordItem, 
                      is_correct: bool, quality: int = None):
         """提交答案并更新学习状态"""
         self.scheduler.update_item_after_review(item, is_correct, quality)
@@ -423,10 +319,7 @@ class MemorizerCore:
         if is_correct:
             self.current_session['correct_answers'] += 1
         
-        if isinstance(item, WordItem):
-            self.current_session['words_reviewed'] += 1
-        else:
-            self.current_session['sentences_reviewed'] += 1
+        self.current_session['words_reviewed'] += 1
         
         # 自动保存进度
         self.data_manager.save_progress()
@@ -441,11 +334,9 @@ class MemorizerCore:
         return {
             'session_time': str(session_time).split('.')[0],  # 去掉微秒
             'words_reviewed': self.current_session['words_reviewed'],
-            'sentences_reviewed': self.current_session['sentences_reviewed'],
             'total_reviewed': self.current_session['total_answers'],
             'accuracy': round(accuracy, 2),
-            'remaining_words': len(self.scheduler.words_queue),
-            'remaining_sentences': len(self.scheduler.sentences_queue)
+            'remaining_words': len(self.scheduler.words_queue)
         }
     
     def get_overall_stats(self) -> Dict:
@@ -457,8 +348,6 @@ class MemorizerCore:
         try:
             if file_type.lower() == 'csv':
                 count = self.data_manager.load_words_from_csv(file_path)
-            elif file_type.lower() == 'json':
-                count = self.data_manager.load_sentences_from_json(file_path)
             else:
                 logger.error(f"不支持的文件类型: {file_type}")
                 return False

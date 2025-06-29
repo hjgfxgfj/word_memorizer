@@ -1,10 +1,10 @@
-# 英语听写与词汇记忆系统 (Word & Sentence Memorizer)
+# 英语单词记忆系统 (Word Memorizer)
 
-一个基于Python开发的智能英语学习系统，集成了听写练习、AI释义、语音识别和学习统计等功能。
+一个基于Python开发的智能英语单词学习系统，集成了听写练习、AI释义和学习统计等功能。
 
 ## ✨ 主要特性
 
-- 📝 **智能听写**: 支持单词和句子的语音听写练习
+- 📝 **智能听写**: 支持英语单词的语音听写练习
 - 🤖 **AI释义**: 集成Deepseek API，提供详细的词汇解释和例句
 - 🔊 **离线TTS**: 使用edge-tts实现高质量语音合成
 - ✏️ **手动输入**: 支持手动输入模式，简化操作流程
@@ -14,12 +14,13 @@
 
 ## 🔄 版本说明
 
-**当前版本为简化版本**，专注于核心功能：
+**当前版本为简化版本**，专注于单词学习功能：
 - ✅ TTS语音播放（edge-tts）
 - ✅ 手动文本输入模式
 - ✅ 智能评分系统
 - ✅ AI释义功能
 - ✅ 学习统计图表
+- ❌ 已移除句子听写功能
 - ❌ 已移除语音识别功能（避免依赖问题）
 
 ## 🛠️ 技术栈
@@ -89,23 +90,16 @@ python scripts/build.py --py2app
 4. 点击"提交答案"查看结果
 5. 可点击"AI释义"获取详细解释
 
-### 2. 句子听写
 
-1. 切换到"句子听写"标签页
-2. 播放句子音频
-3. 在文本框中手动输入听到的句子
-4. 系统会自动比较答案准确度
-
-### 3. 学习统计
+### 2. 学习统计
 
 - 查看总体学习进度
 - 分析每日学习数据
 - 导出学习报告
 
-### 4. 自定义词书
+### 3. 自定义词书
 
 - 支持导入CSV格式的单词文件
-- 支持导入JSON格式的句子文件
 - 文件格式参考`data/`目录下的示例
 
 ## 📁 项目结构
@@ -120,12 +114,10 @@ WordMemorizer/
 ├── ui/                 # 用户界面
 │   └── main.py        # 主界面和交互
 ├── data/               # 数据文件
-│   ├── words_cet6.csv # 示例词汇
-│   └── sentences_500.json # 示例句子
+│   └── words_cet6.csv # 示例词汇
 ├── scripts/            # 构建脚本
 │   └── build.py       # 打包脚本
-├── tests/              # 单元测试
-└── requirements.txt    # 依赖列表
+└── requirements-basic.txt # 依赖列表
 ```
 
 ## 🔧 配置说明
@@ -146,16 +138,6 @@ word,meaning,pronunciation,difficulty
 abandon,放弃；抛弃,/əˈbændən/,2
 ```
 
-**句子JSON格式** (`sentences_500.json`):
-```json
-[
-  {
-    "sentence": "The quick brown fox jumps over the lazy dog.",
-    "translation": "敏捷的棕色狐狸跳过懒惰的狗。",
-    "difficulty": 1
-  }
-]
-```
 
 ## 📊 算法说明
 
@@ -175,23 +157,10 @@ abandon,放弃；抛弃,/əˈbændən/,2
 
 ## 🧪 测试
 
-运行单元测试：
+验证安装是否成功：
 
 ```bash
-python run_tests.py
-```
-
-运行特定模块测试：
-
-```bash
-# 测试核心逻辑
-python run_tests.py core
-
-# 测试AI模块
-python run_tests.py ai
-
-# 测试音频模块
-python run_tests.py audio
+python test_installation.py
 ```
 
 ## 📈 性能优化
@@ -223,11 +192,10 @@ python run_tests.py audio
 
 ## 📊 开发统计
 
-- **总代码量**: ~1300行
-- **核心模块**: 450行 (logic/)
+- **总代码量**: ~1000行
+- **核心模块**: 400行 (logic/)
 - **音频引擎**: 350行 (audio/)
 - **GUI界面**: 400行 (ui/)
-- **测试覆盖**: 400行 (tests/)
 
 ## 📄 许可证
 
@@ -236,14 +204,14 @@ python run_tests.py audio
 ## 👥 开发团队
 
 - **核心逻辑**: 词汇管理、复习调度、AI接口
-- **音频引擎**: TTS合成、语音识别、音频处理
+- **音频引擎**: TTS合成、音频播放、缓存处理
 - **用户界面**: GUI设计、交互逻辑、数据可视化
 
 ## 🔗 相关链接
 
 - [Deepseek API文档](https://platform.deepseek.com/docs)
 - [edge-tts项目](https://github.com/rany2/edge-tts)
-- [SpeechRecognition库](https://pypi.org/project/SpeechRecognition/)
+- [Tkinter文档](https://docs.python.org/3/library/tkinter.html)
 
 ## 🚀 快速开始
 

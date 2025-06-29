@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Main GUI Interface for Word & Sentence Memorizer
-主界面GUI - 使用Tkinter实现多标签页界面
+Main GUI Interface for Word Memorizer
+主界面GUI - 使用Tkinter实现标签页界面
 
 This module provides:
-- Main window with tabbed interface (Word/Sentence/Stats)
+- Main window with tabbed interface (Word/Stats)
 - Word dictation interface with audio controls
-- Sentence dictation interface
 - Statistics panel with matplotlib charts
 - AI explanation popup windows
 - Settings and preferences
@@ -20,7 +19,7 @@ import queue
 import time
 import json
 from pathlib import Path
-from typing import Dict, Optional, List, Union, Callable
+from typing import Dict, Optional, List, Callable
 import logging
 
 # Third-party imports
@@ -34,7 +33,7 @@ import sv_ttk  # Sun Valley theme for modern look
 # Local imports
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
-from logic.core import MemorizerCore, WordItem, SentenceItem
+from logic.core import MemorizerCore, WordItem
 from logic.ai import get_ai_explainer
 from audio.listen import get_listen_engine
 
@@ -45,7 +44,7 @@ logger = logging.getLogger(__name__)
 class AIExplanationWindow:
     """AI释义弹窗"""
     
-    def __init__(self, parent, item: Union[WordItem, SentenceItem]):
+    def __init__(self, parent, item: WordItem):
         self.parent = parent
         self.item = item
         self.ai_explainer = get_ai_explainer()
@@ -88,12 +87,8 @@ class AIExplanationWindow:
         title_frame = ttk.Frame(main_frame)
         title_frame.pack(fill=tk.X, pady=(0, 20))
         
-        if isinstance(self.item, WordItem):
-            title_text = f"单词: {self.item.word}"
-            subtitle_text = f"含义: {self.item.meaning}"
-        else:
-            title_text = "句子释义"
-            subtitle_text = self.item.sentence[:60] + "..." if len(self.item.sentence) > 60 else self.item.sentence
+        title_text = f"单词: {self.item.word}"
+        subtitle_text = f"含义: {self.item.meaning}"
         
         title_label = ttk.Label(title_frame, text=title_text, font=('Arial', 16, 'bold'))
         title_label.pack(anchor=tk.W)
@@ -608,11 +603,8 @@ class DictationInterface:
             return
         
         try:
-            # 比较答案
-            if isinstance(self.current_item, WordItem):
-                correct_answer = self.current_item.word
-            else:
-                correct_answer = self.current_item.sentence
+            # 比较答案 - 现在只处理单词
+            correct_answer = self.current_item.word
             
             comparison_result = self.listen_engine.compare_texts(correct_answer, user_answer)
             is_correct = comparison_result['is_correct']
@@ -707,7 +699,7 @@ class MainApplication:
     
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("英语听写与词汇记忆系统 - Word & Sentence Memorizer")
+        self.root.title("英语单词记忆系统 - Word Memorizer")
         self.root.geometry("1000x700")
         
         # 设置主题
@@ -759,11 +751,6 @@ class MainApplication:
         self.word_frame = ttk.Frame(self.notebook)
         self.notebook.add(self.word_frame, text="📝 单词听写")
         self.word_dictation = DictationInterface(self.word_frame, self.core, "word")
-        
-        # 句子听写页
-        self.sentence_frame = ttk.Frame(self.notebook)
-        self.notebook.add(self.sentence_frame, text="📖 句子听写")
-        self.sentence_dictation = DictationInterface(self.sentence_frame, self.core, "sentence")
         
         # 统计页面
         self.stats_frame = ttk.Frame(self.notebook)

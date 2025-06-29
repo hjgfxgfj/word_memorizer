@@ -26,12 +26,11 @@ def test_core_modules():
     sys.path.insert(0, str(Path(__file__).parent))
     
     try:
-        from logic.core import MemorizerCore, WordItem, SentenceItem
+        from logic.core import MemorizerCore, WordItem
         print("✅ 核心逻辑模块 - 成功导入")
         
         # 测试基本功能
         word = WordItem(word="test", meaning="测试")
-        sentence = SentenceItem(sentence="Test sentence", translation="测试句子")
         print("✅ 数据类 - 创建成功")
         
         core = MemorizerCore("test_data")
