@@ -483,8 +483,12 @@ class StatisticsPanel:
         """导出统计报告"""
         try:
             file_path = filedialog.asksaveasfilename(
-                defaultextension=".json",
-                filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+                defaultextension=".html",
+                filetypes=[
+                    ("HTML files", "*.html"), 
+                    ("JSON files", "*.json"), 
+                    ("All files", "*.*")
+                ],
                 title="保存统计报告"
             )
             
@@ -492,19 +496,234 @@ class StatisticsPanel:
                 stats = self.core.get_overall_stats()
                 session_stats = self.core.get_session_stats()
                 
-                report = {
-                    'export_time': time.strftime('%Y-%m-%d %H:%M:%S'),
-                    'overall_stats': stats,
-                    'session_stats': session_stats
-                }
-                
-                with open(file_path, 'w', encoding='utf-8') as f:
-                    json.dump(report, f, ensure_ascii=False, indent=2)
+                if file_path.endswith('.html'):
+                    self._export_html_report(file_path, stats, session_stats)
+                else:
+                    self._export_json_report(file_path, stats, session_stats)
                 
                 messagebox.showinfo("成功", f"统计报告已保存到: {file_path}")
         except Exception as e:
             logger.error(f"导出报告失败: {e}")
             messagebox.showerror("错误", f"导出失败: {e}")
+    
+    def _export_json_report(self, file_path: str, stats: Dict, session_stats: Dict):
+        """导出JSON格式报告"""
+        report = {
+            'export_time': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'overall_stats': stats,
+            'session_stats': session_stats
+        }
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(report, f, ensure_ascii=False, indent=2)
+    
+    def _export_html_report(self, file_path: str, stats: Dict, session_stats: Dict):
+        """导出HTML格式报告（带图表）"""
+        # 确保matplotlib已加载
+        if not self._load_matplotlib():
+            raise Exception("无法加载matplotlib，无法生成图表")
+        
+        # 生成图表
+        fig = Figure(figsize=(12, 8), dpi=100)
+        
+        # 创建子图
+        ax1 = fig.add_subplot(221)  # 左上：单词统计
+        ax2 = fig.add_subplot(222)  # 右上：准确率
+        ax3 = fig.add_subplot(212)  # 下方：每日进度
+        
+        # 生成图表
+        self._create_word_stats_chart(ax1, stats)
+        self._create_word_accuracy_chart(ax2, stats)
+        self._create_daily_word_progress_chart(ax3, stats)
+        
+        fig.tight_layout()
+        
+        # 保存图表为base64字符串
+        import io
+        import base64
+        
+        img_buffer = io.BytesIO()
+        fig.savefig(img_buffer, format='png', dpi=150, bbox_inches='tight')
+        img_buffer.seek(0)
+        img_data = base64.b64encode(img_buffer.read()).decode()
+        img_buffer.close()
+        
+        # 生成HTML内容
+        html_content = self._generate_html_template(stats, session_stats, img_data)
+        
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(html_content)
+    
+    def _generate_html_template(self, stats: Dict, session_stats: Dict, chart_img: str) -> str:
+        """生成HTML模板"""
+        words = stats.get('words', {})
+        
+        return f'''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordMemorizer 学习报告</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }}
+        .container {{
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }}
+        .header p {{
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }}
+        .content {{
+            padding: 30px;
+        }}
+        .stats-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }}
+        .stat-card {{
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }}
+        .stat-card h3 {{
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1em;
+        }}
+        .stat-card .value {{
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2a5298;
+            margin: 10px 0;
+        }}
+        .stat-card .unit {{
+            color: #666;
+            font-size: 0.9em;
+        }}
+        .chart-section {{
+            margin-top: 30px;
+            text-align: center;
+        }}
+        .chart-section h2 {{
+            color: #333;
+            margin-bottom: 20px;
+        }}
+        .chart-image {{
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }}
+        .session-info {{
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }}
+        .session-info h3 {{
+            margin-top: 0;
+            color: #495057;
+        }}
+        .progress-bar {{
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+        }}
+        .progress-fill {{
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }}
+        .footer {{
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 WordMemorizer 学习报告</h1>
+            <p>生成时间: {time.strftime('%Y年%m月%d日 %H:%M:%S')}</p>
+        </div>
+        
+        <div class="content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>📖 词汇总数</h3>
+                    <div class="value">{words.get('total', 0)}</div>
+                    <div class="unit">个单词</div>
+                </div>
+                <div class="stat-card">
+                    <h3>✅ 已复习</h3>
+                    <div class="value">{words.get('reviewed', 0)}</div>
+                    <div class="unit">个单词</div>
+                </div>
+                <div class="stat-card">
+                    <h3>🎯 准确率</h3>
+                    <div class="value">{words.get('accuracy', 0):.1f}%</div>
+                    <div class="unit">正确率</div>
+                </div>
+                <div class="stat-card">
+                    <h3>📊 平均难度</h3>
+                    <div class="value">{words.get('avg_difficulty', 0):.1f}</div>
+                    <div class="unit">/ 5.0</div>
+                </div>
+            </div>
+            
+            <div class="session-info">
+                <h3>🎮 本次学习session</h3>
+                <p><strong>学习时长:</strong> {session_stats.get('session_time', '0:00:00')}</p>
+                <p><strong>复习单词:</strong> {session_stats.get('words_reviewed', 0)} 个</p>
+                <p><strong>本次准确率:</strong> {session_stats.get('accuracy', 0):.1f}%</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {min(session_stats.get('accuracy', 0), 100)}%"></div>
+                </div>
+                <p><strong>剩余待复习:</strong> {session_stats.get('remaining_words', 0)} 个单词</p>
+            </div>
+            
+            <div class="chart-section">
+                <h2>📈 学习统计图表</h2>
+                <img src="data:image/png;base64,{chart_img}" alt="学习统计图表" class="chart-image">
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>📱 Generated by WordMemorizer v1.1.0 | 英语单词记忆系统</p>
+        </div>
+    </div>
+</body>
+</html>'''
 
 
 class DictationInterface:
