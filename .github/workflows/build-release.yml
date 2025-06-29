@@ -6,6 +6,9 @@ on:
       - 'v*'  # 触发条件：推送版本标签如 v1.0.0
   workflow_dispatch:  # 手动触发
 
+permissions:
+  contents: write  # 允许创建Release和上传文件
+
 jobs:
   build:
     name: Build on ${{ matrix.os }}
@@ -110,4 +113,66 @@ jobs:
       with:
         name: ${{ matrix.artifact_name }}
         path: release/
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: WordMemorizer-*
+        merge-multiple: true
+
+    - name: List downloaded files
+      run: |
+        echo "当前目录内容:"
+        ls -la
+        echo "寻找压缩文件:"
+        find . -name "*.zip" -o -name "*.tar.gz"
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          **/WordMemorizer-Windows.zip
+          **/WordMemorizer-macOS.zip
+          **/WordMemorizer-Linux.tar.gz
+        body: |
+          ## 🎉 英语单词记忆系统 - 多平台发布版
+
+          ### 📦 下载说明
+          - **Windows用户**: 下载 `WordMemorizer-Windows.zip`，解压后双击 `WordMemorizer.exe`
+          - **macOS用户**: 下载 `WordMemorizer-macOS.zip`，解压后运行 `./WordMemorizer`（推荐）
+          - **Linux用户**: 下载 `WordMemorizer-Linux.tar.gz`，解压后运行 `./WordMemorizer`
+
+          ### ✨ 主要功能
+          - 🔊 TTS语音播放
+          - ✏️ 手动输入练习
+          - 🤖 AI词汇释义
+          - 📊 学习统计图表
+          - 🧠 智能复习算法（SM-2）
+          - 💾 学习进度自动保存
+
+          ### 📋 系统要求
+          - **Windows**: Windows 10+ 
+          - **macOS**: macOS 10.14+
+          - **Linux**: Ubuntu 18.04+ 或同等发行版
+
+          ### 🚀 使用方法
+          1. 下载对应平台的压缩包
+          2. 解压到任意目录
+          3. 运行可执行文件
+          4. 无需安装Python或其他依赖！
+
+          ---
+          🎯 **开箱即用，支持离线使用！**
+        draft: false
+        prerelease: false
 
