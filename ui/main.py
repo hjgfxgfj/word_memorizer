@@ -247,18 +247,55 @@ class StatisticsPanel:
     def _setup_fonts(self):
         """设置中文字体支持"""
         try:
-            # 简化字体配置，避免扫描所有字体
-            # 使用英文标签避免中文字体问题
-            plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'sans-serif']
-            plt.rcParams['axes.unicode_minus'] = False
+            import platform
+            system = platform.system()
             
-            logger.info("matplotlib字体配置完成（使用英文标签）")
+            if system == 'Darwin':  # macOS
+                # macOS使用系统自带的中文字体
+                plt.rcParams['font.sans-serif'] = ['Hiragino Sans GB', 'PingFang SC', 'Arial Unicode MS', 'Arial']
+                logger.info("matplotlib字体配置完成（macOS - 支持中文）")
+            elif system == 'Windows':
+                # Windows使用常见的中文字体
+                plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Arial Unicode MS', 'Arial']  
+                logger.info("matplotlib字体配置完成（Windows - 支持中文）")
+            else:
+                # Linux等其他系统使用英文字体
+                plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'sans-serif']
+                logger.info("matplotlib字体配置完成（Linux - 英文标签）")
+            
+            plt.rcParams['axes.unicode_minus'] = False
             
         except Exception as e:
             logger.warning(f"字体设置失败: {e}")
             # 使用默认设置
             plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial']
             plt.rcParams['axes.unicode_minus'] = False
+    
+    def _get_labels(self):
+        """根据平台返回合适的标签"""
+        import platform
+        system = platform.system()
+        
+        if system in ['Darwin', 'Windows']:  # macOS and Windows
+            return {
+                'correct': '正确',
+                'incorrect': '错误', 
+                'word_accuracy': '单词准确率',
+                'daily_progress': '每日学习进度（最近14天）',
+                'date': '日期',
+                'words_reviewed': '复习单词数',
+                'no_records': '暂无学习记录'
+            }
+        else:  # Linux and others
+            return {
+                'correct': 'Correct',
+                'incorrect': 'Incorrect',
+                'word_accuracy': 'Word Accuracy', 
+                'daily_progress': 'Daily Word Learning Progress (Last 14 Days)',
+                'date': 'Date',
+                'words_reviewed': 'Words Reviewed',
+                'no_records': 'No word learning records yet'
+            }
     
     def _create_widgets(self):
         """创建统计面板组件"""
@@ -394,16 +431,18 @@ class StatisticsPanel:
             correct_count = int(word_reviewed * word_accuracy / 100)
             incorrect_count = word_reviewed - correct_count
             
-            labels = ['Correct', 'Incorrect']
+            labels_dict = self._get_labels()
+            labels = [labels_dict['correct'], labels_dict['incorrect']]
             sizes = [correct_count, incorrect_count]
             colors = ['lightgreen', 'lightcoral']
             
             ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-            ax.set_title(f'Word Accuracy ({word_accuracy:.1f}%)')
+            ax.set_title(f"{labels_dict['word_accuracy']} ({word_accuracy:.1f}%)")
         else:
-            ax.text(0.5, 0.5, 'No learning data yet', ha='center', va='center', 
+            labels_dict = self._get_labels()
+            ax.text(0.5, 0.5, labels_dict['no_records'], ha='center', va='center', 
                    transform=ax.transAxes, fontsize=12)
-            ax.set_title('Word Accuracy')
+            ax.set_title(labels_dict['word_accuracy'])
     
     def _create_daily_word_progress_chart(self, ax, stats: Dict):
         """创建每日单词学习进度折线图"""
@@ -416,9 +455,10 @@ class StatisticsPanel:
             ax.plot(dates, word_counts, marker='o', linewidth=2, color='blue', 
                    markersize=6, markerfacecolor='lightblue')
             
-            ax.set_title('Daily Word Learning Progress (Last 14 Days)')
-            ax.set_xlabel('Date')
-            ax.set_ylabel('Words Reviewed')
+            labels_dict = self._get_labels()
+            ax.set_title(labels_dict['daily_progress'])
+            ax.set_xlabel(labels_dict['date'])
+            ax.set_ylabel(labels_dict['words_reviewed'])
             ax.grid(True, alpha=0.3)
             
             # 填充区域
@@ -427,9 +467,10 @@ class StatisticsPanel:
             # 旋转x轴标签
             plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
         else:
-            ax.text(0.5, 0.5, 'No word learning records yet', ha='center', va='center', 
+            labels_dict = self._get_labels()
+            ax.text(0.5, 0.5, labels_dict['no_records'], ha='center', va='center', 
                    transform=ax.transAxes, fontsize=12)
-            ax.set_title('Daily Word Learning Progress')
+            ax.set_title(labels_dict['daily_progress'])
     
     def export_report(self):
         """导出统计报告"""
