@@ -31,8 +31,26 @@
 
 ### 安装依赖
 
+**注意**: 如果遇到"externally-managed-environment"错误，需要使用虚拟环境：
+
 ```bash
-pip install -r requirements.txt
+# 创建虚拟环境
+python3 -m venv venv
+
+# 激活虚拟环境
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
+
+# 安装依赖
+pip install numpy scipy matplotlib Pillow pygame requests sv-ttk edge-tts sounddevice SpeechRecognition pydub
+
+# 或者使用requirements文件（可能需要多次尝试）
+pip install -r requirements-basic.txt
+```
+
+**验证安装**:
+```bash
+python test_installation.py
 ```
 
 ### 运行程序
