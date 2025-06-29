@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-06-29T11:38:26.200400",
+  "timestamp": "2025-06-29T12:05:34.522652",
   "words": {
     "abandon": {
       "word": "abandon",
@@ -18,12 +18,12 @@
       "meaning": "抽象的；摘要",
       "pronunciation": "/ˈæbstrækt/",
       "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422507",
-      "next_review": "2025-06-29T11:30:34.422509",
+      "review_count": 1,
+      "correct_count": 1,
+      "last_review": "2025-06-29T12:00:59.738401",
+      "next_review": "2025-07-05T12:00:59.738418",
       "easiness_factor": 2.5,
-      "interval": 1
+      "interval": 6
     },
     "academic": {
       "word": "academic",
@@ -54,12 +54,12 @@
       "meaning": "口音；重音",
       "pronunciation": "/ˈæksent/",
       "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422522",
-      "next_review": "2025-06-29T11:30:34.422523",
+      "review_count": 1,
+      "correct_count": 1,
+      "last_review": "2025-06-29T12:01:22.287923",
+      "next_review": "2025-07-05T12:01:22.287939",
       "easiness_factor": 2.5,
-      "interval": 1
+      "interval": 6
     },
     "acceptable": {
       "word": "acceptable",
@@ -78,11 +78,11 @@
       "meaning": "通道；访问",
       "pronunciation": "/ˈækses/",
       "difficulty": 2,
-      "review_count": 0,
+      "review_count": 1,
       "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422532",
-      "next_review": "2025-06-29T11:30:34.422533",
-      "easiness_factor": 2.5,
+      "last_review": "2025-06-29T11:55:57.258865",
+      "next_review": "2025-06-30T11:55:57.258881",
+      "easiness_factor": 1.96,
       "interval": 1
     },
     "accommodate": {
@@ -114,12 +114,12 @@
       "meaning": "完成；实现",
       "pronunciation": "/əˈkʌmplɪʃ/",
       "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422544",
-      "next_review": "2025-06-29T11:30:34.422545",
+      "review_count": 1,
+      "correct_count": 1,
+      "last_review": "2025-06-29T12:05:20.852191",
+      "next_review": "2025-07-05T12:05:20.852234",
       "easiness_factor": 2.5,
-      "interval": 1
+      "interval": 6
     },
     "accord": {
       "word": "accord",
@@ -198,11 +198,11 @@
       "meaning": "适应；改编",
       "pronunciation": "/əˈdæpt/",
       "difficulty": 2,
-      "review_count": 0,
+      "review_count": 1,
       "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422568",
-      "next_review": "2025-06-29T11:30:34.422569",
-      "easiness_factor": 2.5,
+      "last_review": "2025-06-29T12:01:13.071445",
+      "next_review": "2025-06-30T12:01:13.071459",
+      "easiness_factor": 1.96,
       "interval": 1
     },
     "adequate": {
@@ -234,233 +234,11 @@
       "meaning": "调整；适应",
       "pronunciation": "/əˈdʒʌst/",
       "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422582",
-      "next_review": "2025-06-29T11:30:34.422583",
-      "easiness_factor": 2.5,
-      "interval": 1
-    }
-  },
-  "sentences": {
-    "The quick brown fox jumps over the lazy dog.": {
-      "sentence": "The quick brown fox jumps over the lazy dog.",
-      "translation": "敏捷的棕色狐狸跳过懒惰的狗。",
-      "difficulty": 1,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422824",
-      "next_review": "2025-06-29T11:30:34.422826",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Knowledge is power, and education is the key to unlock it.": {
-      "sentence": "Knowledge is power, and education is the key to unlock it.",
-      "translation": "知识就是力量，教育是打开知识之门的钥匙。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422829",
-      "next_review": "2025-06-29T11:30:34.422830",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The advancement of technology has revolutionized the way we communicate.": {
-      "sentence": "The advancement of technology has revolutionized the way we communicate.",
-      "translation": "技术的进步彻底改变了我们交流的方式。",
-      "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422832",
-      "next_review": "2025-06-29T11:30:34.422833",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Success is not final, failure is not fatal: it is the courage to continue that counts.": {
-      "sentence": "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-      "translation": "成功不是终点，失败也不是致命的：重要的是继续前行的勇气。",
-      "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422834",
-      "next_review": "2025-06-29T11:30:34.422835",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The library is open from Monday to Friday.": {
-      "sentence": "The library is open from Monday to Friday.",
-      "translation": "图书馆周一到周五开放。",
-      "difficulty": 1,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422837",
-      "next_review": "2025-06-29T11:30:34.422838",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Climate change poses a significant threat to our planet's future.": {
-      "sentence": "Climate change poses a significant threat to our planet's future.",
-      "translation": "气候变化对我们地球的未来构成重大威胁。",
-      "difficulty": 3,
       "review_count": 1,
       "correct_count": 0,
-      "last_review": "2025-06-29T11:38:10.598583",
-      "next_review": "2025-06-30T11:38:10.598599",
+      "last_review": "2025-06-29T12:05:30.589719",
+      "next_review": "2025-06-30T12:05:30.589730",
       "easiness_factor": 1.96,
-      "interval": 1
-    },
-    "She decided to pursue a career in computer science.": {
-      "sentence": "She decided to pursue a career in computer science.",
-      "translation": "她决定从事计算机科学方面的职业。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422841",
-      "next_review": "2025-06-29T11:30:34.422842",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The conference will be held next month in Beijing.": {
-      "sentence": "The conference will be held next month in Beijing.",
-      "translation": "会议将于下个月在北京举行。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422844",
-      "next_review": "2025-06-29T11:30:34.422844",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Regular exercise and a balanced diet are essential for good health.": {
-      "sentence": "Regular exercise and a balanced diet are essential for good health.",
-      "translation": "定期锻炼和均衡饮食对身体健康至关重要。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422846",
-      "next_review": "2025-06-29T11:30:34.422846",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The novel explores themes of love, loss, and redemption.": {
-      "sentence": "The novel explores themes of love, loss, and redemption.",
-      "translation": "这部小说探讨了爱情、失落和救赎的主题。",
-      "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422848",
-      "next_review": "2025-06-29T11:30:34.422849",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "I need to finish my homework before watching TV.": {
-      "sentence": "I need to finish my homework before watching TV.",
-      "translation": "我需要在看电视之前完成作业。",
-      "difficulty": 1,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422850",
-      "next_review": "2025-06-29T11:30:34.422851",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The economic situation has improved significantly over the past year.": {
-      "sentence": "The economic situation has improved significantly over the past year.",
-      "translation": "过去一年里经济状况显著改善。",
-      "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422853",
-      "next_review": "2025-06-29T11:30:34.422853",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Learning a new language opens doors to different cultures.": {
-      "sentence": "Learning a new language opens doors to different cultures.",
-      "translation": "学习一门新语言为了解不同文化打开大门。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422855",
-      "next_review": "2025-06-29T11:30:34.422856",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The team worked collaboratively to solve the complex problem.": {
-      "sentence": "The team worked collaboratively to solve the complex problem.",
-      "translation": "团队协作解决了这个复杂的问题。",
-      "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422857",
-      "next_review": "2025-06-29T11:30:34.422858",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Technology has made our lives more convenient and efficient.": {
-      "sentence": "Technology has made our lives more convenient and efficient.",
-      "translation": "技术使我们的生活更加便利和高效。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422859",
-      "next_review": "2025-06-29T11:30:34.422860",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The museum exhibits artifacts from ancient civilizations.": {
-      "sentence": "The museum exhibits artifacts from ancient civilizations.",
-      "translation": "博物馆展出了古代文明的文物。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422861",
-      "next_review": "2025-06-29T11:30:34.422862",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Environmental protection requires collective effort from everyone.": {
-      "sentence": "Environmental protection requires collective effort from everyone.",
-      "translation": "环境保护需要每个人的集体努力。",
-      "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422863",
-      "next_review": "2025-06-29T11:30:34.422864",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "The student demonstrated exceptional performance in mathematics.": {
-      "sentence": "The student demonstrated exceptional performance in mathematics.",
-      "translation": "这名学生在数学方面表现出色。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422866",
-      "next_review": "2025-06-29T11:30:34.422866",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Innovation drives progress in science and technology.": {
-      "sentence": "Innovation drives progress in science and technology.",
-      "translation": "创新推动科学技术的进步。",
-      "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422868",
-      "next_review": "2025-06-29T11:30:34.422868",
-      "easiness_factor": 2.5,
-      "interval": 1
-    },
-    "Reading books expands your vocabulary and imagination.": {
-      "sentence": "Reading books expands your vocabulary and imagination.",
-      "translation": "读书能扩大你的词汇量和想象力。",
-      "difficulty": 2,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422870",
-      "next_review": "2025-06-29T11:30:34.422871",
-      "easiness_factor": 2.5,
       "interval": 1
     }
   }

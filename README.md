@@ -35,12 +35,29 @@
 
 ## 📦 安装和运行
 
-### 环境要求
+### 🐳 Docker 部署（推荐）
+
+最简单的使用方式，无需配置Python环境：
+
+```bash
+# 克隆项目
+git clone https://github.com/BillWang-dev/word_memorizer.git
+cd word_memorizer
+
+# 一键启动（自动处理GUI和音频支持）
+./docker-run.sh
+```
+
+详细说明请查看 [DOCKER.md](DOCKER.md)
+
+### 💻 本地安装
+
+#### 环境要求
 
 - Python 3.8+
 - 操作系统: Windows 10+, macOS 10.14+, Ubuntu 18.04+
 
-### 安装依赖
+#### 安装依赖
 
 **注意**: 如果遇到"externally-managed-environment"错误，需要使用虚拟环境：
 
@@ -64,13 +81,13 @@ pip install -r requirements-basic.txt
 python test_installation.py
 ```
 
-### 运行程序
+#### 运行程序
 
 ```bash
 python ui/main.py
 ```
 
-### 构建可执行文件
+#### 构建可执行文件
 
 ```bash
 # 所有平台 (PyInstaller)
