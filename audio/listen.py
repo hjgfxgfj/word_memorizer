@@ -30,7 +30,7 @@ import sounddevice as sd
 import numpy as np
 from scipy.io import wavfile
 import edge_tts
-import speech_recognition as sr
+# 移除语音识别依赖，专注于TTS和手动输入功能
 from pydub import AudioSegment
 from pydub.playback import play
 import pygame
@@ -371,133 +371,50 @@ class AudioPlayer:
 
 
 class AudioRecorder:
-    """音频录制器"""
+    """简化的音频录制器 - 仅支持手动输入模式"""
     
-    def __init__(self, sample_rate: int = 16000):
-        self.sample_rate = sample_rate
-        self.channels = 1  # 单声道
-        self.dtype = np.int16
+    def __init__(self):
         self.is_recording = False
-        self.recorded_data = []
-        self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
-        
-        # 调整麦克风噪音
-        with self.microphone as source:
-            self.recognizer.adjust_for_ambient_noise(source)
+        logger.info("音频录制器已初始化 - 手动输入模式")
     
     def start_recording(self) -> bool:
-        """开始录音"""
+        """模拟开始录音 - 实际只是状态切换"""
         if self.is_recording:
             logger.warning("录音已经在进行中")
             return False
         
-        try:
-            self.recorded_data = []
-            self.is_recording = True
-            
-            def record_callback(indata, frames, time, status):
-                if status:
-                    logger.warning(f"录音状态: {status}")
-                if self.is_recording:
-                    self.recorded_data.append(indata.copy())
-            
-            self._stream = sd.InputStream(
-                callback=record_callback,
-                samplerate=self.sample_rate,
-                channels=self.channels,
-                dtype=self.dtype
-            )
-            self._stream.start()
-            
-            logger.info("开始录音...")
-            return True
-        except Exception as e:
-            logger.error(f"开始录音失败: {e}")
-            self.is_recording = False
-            return False
+        self.is_recording = True
+        logger.info("模拟录音开始 - 请手动输入文本")
+        return True
     
-    def stop_recording(self) -> Optional[np.ndarray]:
-        """停止录音并返回录音数据"""
+    def stop_recording(self) -> Optional[str]:
+        """模拟停止录音 - 返回提示信息"""
         if not self.is_recording:
             logger.warning("没有正在进行的录音")
             return None
         
-        try:
-            self.is_recording = False
-            self._stream.stop()
-            self._stream.close()
-            
-            if self.recorded_data:
-                audio_data = np.concatenate(self.recorded_data, axis=0)
-                logger.info(f"录音完成，时长: {len(audio_data) / self.sample_rate:.2f}秒")
-                return audio_data
-            else:
-                logger.warning("没有录制到音频数据")
-                return None
-        except Exception as e:
-            logger.error(f"停止录音失败: {e}")
-            return None
+        self.is_recording = False
+        logger.info("模拟录音结束 - 请在文本框中手动输入")
+        return "请手动输入听到的内容"
     
-    def record_for_duration(self, duration: float) -> Optional[np.ndarray]:
-        """录制指定时长的音频"""
-        if not self.start_recording():
-            return None
-        
-        time.sleep(duration)
-        return self.stop_recording()
+    def record_for_duration(self, duration: float) -> str:
+        """模拟录制指定时长"""
+        self.start_recording()
+        time.sleep(0.5)  # 短暂延迟模拟录音过程
+        self.stop_recording()
+        return "请手动输入听到的内容"
     
-    def save_recording(self, audio_data: np.ndarray, file_path: str) -> bool:
-        """保存录音到文件"""
-        try:
-            wavfile.write(file_path, self.sample_rate, audio_data)
-            logger.info(f"录音已保存: {file_path}")
-            return True
-        except Exception as e:
-            logger.error(f"保存录音失败: {e}")
-            return False
+    def recognize_speech(self, text_input: str = None) -> str:
+        """直接返回手动输入的文本"""
+        if text_input:
+            logger.info(f"手动输入内容: {text_input}")
+            return text_input
+        else:
+            return "请在文本框中输入内容"
     
-    def recognize_speech(self, audio_data: np.ndarray, language: str = 'en-US') -> str:
-        """识别语音内容"""
-        try:
-            # 将numpy数组转换为AudioData对象
-            with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as temp_file:
-                temp_path = temp_file.name
-            
-            self.save_recording(audio_data, temp_path)
-            
-            # 使用speech_recognition进行语音识别
-            with sr.AudioFile(temp_path) as source:
-                audio = self.recognizer.record(source)
-            
-            # 使用Google语音识别
-            try:
-                text = self.recognizer.recognize_google(audio, language=language)
-                logger.info(f"语音识别结果: {text}")
-                return text
-            except sr.UnknownValueError:
-                logger.warning("无法识别语音内容")
-                return ""
-            except sr.RequestError as e:
-                logger.error(f"语音识别服务错误: {e}")
-                return ""
-        except Exception as e:
-            logger.error(f"语音识别失败: {e}")
-            return ""
-        finally:
-            try:
-                os.unlink(temp_path)
-            except:
-                pass
-    
-    def get_audio_level(self, audio_data: np.ndarray) -> float:
-        """获取音频音量级别"""
-        if audio_data is None or len(audio_data) == 0:
-            return 0.0
-        
-        # 计算RMS音量
-        rms = np.sqrt(np.mean(audio_data.astype(float) ** 2))
-        return min(100.0, rms / 1000.0 * 100)  # 转换为百分比
+    def get_audio_level(self) -> float:
+        """返回模拟音量级别"""
+        return 50.0  # 固定返回中等音量级别
 
 
 class ListenEngine:
@@ -543,29 +460,23 @@ class ListenEngine:
         return self.recorder.start_recording()
     
     def stop_dictation(self) -> Tuple[str, float]:
-        """停止听写并返回识别结果和音量级别"""
-        audio_data = self.recorder.stop_recording()
-        if audio_data is None:
+        """停止听写并返回提示信息"""
+        result = self.recorder.stop_recording()
+        if result is None:
             return "", 0.0
         
-        # 获取音量级别
-        volume_level = self.recorder.get_audio_level(audio_data)
+        # 获取模拟音量级别
+        volume_level = self.recorder.get_audio_level()
         
-        # 语音识别
-        recognized_text = self.recorder.recognize_speech(audio_data, self.current_language)
-        
-        return recognized_text, volume_level
+        # 返回提示信息
+        return result, volume_level
     
     def record_for_duration(self, duration: float) -> Tuple[str, float]:
-        """录制指定时长并返回识别结果"""
-        audio_data = self.recorder.record_for_duration(duration)
-        if audio_data is None:
-            return "", 0.0
+        """模拟录制并返回提示"""
+        result = self.recorder.record_for_duration(duration)
+        volume_level = self.recorder.get_audio_level()
         
-        volume_level = self.recorder.get_audio_level(audio_data)
-        recognized_text = self.recorder.recognize_speech(audio_data, self.current_language)
-        
-        return recognized_text, volume_level
+        return result, volume_level
     
     def compare_texts(self, original: str, recognized: str) -> Dict:
         """比较原文和识别文本"""

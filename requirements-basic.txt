@@ -19,8 +19,8 @@ pygame>=2.1.0
 # Text-to-Speech (offline)
 edge-tts>=6.1.0
 
-# Speech recognition
-SpeechRecognition>=3.8.1
+# Speech recognition (移除 - 使用手动输入模式)
+# SpeechRecognition>=3.8.1
 
 # HTTP requests
 requests>=2.28.0

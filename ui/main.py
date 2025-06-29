@@ -491,31 +491,23 @@ class DictationInterface:
                                variable=self.volume_var, command=self._on_volume_change)
         volume_scale.pack(side=tk.LEFT, padx=(5, 0))
         
-        # 录音区域
-        record_frame = ttk.LabelFrame(main_frame, text="录音听写", padding="15")
-        record_frame.pack(fill=tk.X, pady=(0, 20))
+        # 提示区域
+        hint_frame = ttk.LabelFrame(main_frame, text="使用提示", padding="15")
+        hint_frame.pack(fill=tk.X, pady=(0, 20))
         
-        self.record_button = ttk.Button(record_frame, text="🎤 开始录音", command=self._toggle_recording)
-        self.record_button.pack(side=tk.LEFT, padx=(0, 10))
-        
-        self.recording_status = ttk.Label(record_frame, text="准备录音")
-        self.recording_status.pack(side=tk.LEFT)
+        hint_text = "💡 听取语音后，请在下方文本框中手动输入您听到的内容"
+        self.hint_label = ttk.Label(hint_frame, text=hint_text, font=('Arial', 10))
+        self.hint_label.pack()
         
         # 答案输入区域
         answer_frame = ttk.LabelFrame(main_frame, text="答案输入", padding="15")
         answer_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
         
-        # 录音识别结果
-        ttk.Label(answer_frame, text="识别结果:").pack(anchor=tk.W)
-        self.recognized_text = scrolledtext.ScrolledText(answer_frame, height=3, wrap=tk.WORD,
-                                                       font=('Arial', 11))
-        self.recognized_text.pack(fill=tk.X, pady=(5, 10))
-        
-        # 手动输入
-        ttk.Label(answer_frame, text="手动输入:").pack(anchor=tk.W)
-        self.manual_input = scrolledtext.ScrolledText(answer_frame, height=3, wrap=tk.WORD,
-                                                    font=('Arial', 11))
-        self.manual_input.pack(fill=tk.X, pady=(5, 10))
+        # 答案输入
+        ttk.Label(answer_frame, text="请输入您听到的内容:").pack(anchor=tk.W)
+        self.answer_input = scrolledtext.ScrolledText(answer_frame, height=4, wrap=tk.WORD,
+                                                    font=('Arial', 12))
+        self.answer_input.pack(fill=tk.X, pady=(5, 10))
         
         # 提交按钮
         submit_frame = ttk.Frame(answer_frame)
@@ -548,13 +540,11 @@ class DictationInterface:
     def _reset_interface(self):
         """重置界面状态"""
         self.answer_submitted = False
-        self.recognized_text.delete(1.0, tk.END)
-        self.manual_input.delete(1.0, tk.END)
+        self.answer_input.delete(1.0, tk.END)
         self.result_text.config(state=tk.NORMAL)
         self.result_text.delete(1.0, tk.END)
         self.result_text.config(state=tk.DISABLED)
         self.submit_button.config(state=tk.NORMAL)
-        self.recording_status.config(text="准备录音")
     
     def _display_current_item(self):
         """显示当前项目"""
@@ -604,45 +594,17 @@ class DictationInterface:
         volume = float(value)
         self.listen_engine.set_playback_volume(volume)
     
-    def _toggle_recording(self):
-        """切换录音状态"""
-        if not self.is_recording:
-            self._start_recording()
-        else:
-            self._stop_recording()
-    
-    def _start_recording(self):
-        """开始录音"""
-        if self.listen_engine.start_dictation():
-            self.is_recording = True
-            self.record_button.config(text="⏹️ 停止录音")
-            self.recording_status.config(text="正在录音...")
-    
-    def _stop_recording(self):
-        """停止录音"""
-        recognized_text, volume_level = self.listen_engine.stop_dictation()
-        
-        self.is_recording = False
-        self.record_button.config(text="🎤 开始录音")
-        self.recording_status.config(text=f"录音完成 (音量: {volume_level:.1f}%)")
-        
-        # 显示识别结果
-        self.recognized_text.delete(1.0, tk.END)
-        self.recognized_text.insert(1.0, recognized_text)
     
     def _submit_answer(self):
         """提交答案"""
         if self.answer_submitted:
             return
         
-        # 获取答案（优先使用手动输入）
-        manual_answer = self.manual_input.get(1.0, tk.END).strip()
-        recognized_answer = self.recognized_text.get(1.0, tk.END).strip()
+        # 获取用户输入的答案
+        user_answer = self.answer_input.get(1.0, tk.END).strip()
         
-        final_answer = manual_answer if manual_answer else recognized_answer
-        
-        if not final_answer:
-            messagebox.showwarning("提示", "请输入答案或进行录音识别")
+        if not user_answer:
+            messagebox.showwarning("提示", "请输入您听到的内容")
             return
         
         # 比较答案
@@ -651,14 +613,14 @@ class DictationInterface:
         else:
             correct_answer = self.current_item.sentence
         
-        comparison_result = self.listen_engine.compare_texts(correct_answer, final_answer)
+        comparison_result = self.listen_engine.compare_texts(correct_answer, user_answer)
         is_correct = comparison_result['is_correct']
         
         # 更新学习状态
         self.core.submit_answer(self.current_item, is_correct)
         
         # 显示结果
-        self._display_result(comparison_result, correct_answer, final_answer)
+        self._display_result(comparison_result, correct_answer, user_answer)
         
         self.answer_submitted = True
         self.submit_button.config(state=tk.DISABLED)
