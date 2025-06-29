@@ -68,9 +68,35 @@ def install_dependencies():
     return True
 
 
+def prebuild_matplotlib_cache():
+    """预构建matplotlib字体缓存"""
+    print("Pre-building matplotlib font cache...")
+    try:
+        # 导入matplotlib并触发字体缓存构建
+        import matplotlib.pyplot as plt
+        import matplotlib.font_manager as fm
+        
+        # 强制重建字体缓存
+        fm._load_fontmanager(try_read_cache=False)
+        
+        # 创建一个简单的图表来确保缓存完全构建
+        fig, ax = plt.subplots(figsize=(1, 1))
+        ax.text(0.5, 0.5, 'Test', fontsize=12)
+        plt.close(fig)
+        
+        print("   Matplotlib font cache built successfully")
+        return True
+    except Exception as e:
+        print(f"   Warning: Failed to prebuild matplotlib cache: {e}")
+        return False
+
+
 def build_with_pyinstaller():
     """使用PyInstaller构建"""
     print("Building with PyInstaller...")
+    
+    # 预构建matplotlib缓存
+    prebuild_matplotlib_cache()
     
     # 根据平台选择路径分隔符
     current_platform = platform.system().lower()

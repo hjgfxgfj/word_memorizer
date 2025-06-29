@@ -22,18 +22,12 @@ from pathlib import Path
 from typing import Dict, Optional, List, Callable
 import logging
 
-# Third-party imports
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-import matplotlib.font_manager as fm
-import numpy as np
+# Third-party imports - 延迟导入matplotlib以提升启动速度
+# matplotlib相关导入移到StatisticsPanel类中按需加载
 from PIL import Image, ImageTk
 import sv_ttk  # Sun Valley theme for modern look
 
-# 配置matplotlib中文字体支持
-plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'SimHei', 'DejaVu Sans', 'Arial']
-plt.rcParams['axes.unicode_minus'] = False
+# matplotlib配置移到StatisticsPanel中延迟加载
 
 # Local imports
 import sys
@@ -229,33 +223,36 @@ class StatisticsPanel:
         self.core = core
         self.figure = None
         self.canvas = None
-        self._setup_fonts()
+        self.matplotlib_loaded = False
         self._create_widgets()
+    
+    def _load_matplotlib(self):
+        """延迟加载matplotlib"""
+        if not self.matplotlib_loaded:
+            try:
+                global plt, Figure, FigureCanvasTkAgg, fm, np
+                import matplotlib.pyplot as plt
+                from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+                from matplotlib.figure import Figure
+                import matplotlib.font_manager as fm
+                import numpy as np
+                self.matplotlib_loaded = True
+                self._setup_fonts()
+                logger.info("matplotlib已加载")
+            except Exception as e:
+                logger.error(f"加载matplotlib失败: {e}")
+                return False
+        return True
     
     def _setup_fonts(self):
         """设置中文字体支持"""
         try:
-            # 尝试查找系统中可用的中文字体
-            available_fonts = [f.name for f in fm.fontManager.ttflist]
-            
-            # 优先选择的中文字体列表
-            chinese_fonts = [
-                'PingFang SC', 'Hiragino Sans GB', 'STHeiti', 'SimHei', 
-                'Microsoft YaHei', 'Arial Unicode MS', 'Noto Sans CJK'
-            ]
-            
-            # 找到第一个可用的中文字体
-            selected_font = 'DejaVu Sans'  # 默认字体
-            for font in chinese_fonts:
-                if font in available_fonts:
-                    selected_font = font
-                    break
-            
-            # 设置matplotlib字体
-            plt.rcParams['font.sans-serif'] = [selected_font, 'DejaVu Sans', 'Arial']
+            # 简化字体配置，避免扫描所有字体
+            # 使用英文标签避免中文字体问题
+            plt.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'sans-serif']
             plt.rcParams['axes.unicode_minus'] = False
             
-            logger.info(f"字体设置成功: {selected_font}")
+            logger.info("matplotlib字体配置完成（使用英文标签）")
             
         except Exception as e:
             logger.warning(f"字体设置失败: {e}")
