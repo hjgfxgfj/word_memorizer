@@ -199,12 +199,25 @@ class DataManager:
         """获取学习统计信息"""
         word_stats = self._calculate_item_stats(self.words.values())
         
+        # 现在只有单词数据，句子数据暂时返回空的统计
+        sentence_stats = {
+            'reviewed': 0,
+            'accuracy': 0.0,
+            'avg_difficulty': 0.0
+        }
+        
         return {
             'words': {
                 'total': len(self.words),
                 'reviewed': word_stats['reviewed'],
                 'accuracy': word_stats['accuracy'],
                 'avg_difficulty': word_stats['avg_difficulty']
+            },
+            'sentences': {
+                'total': 0,  # 暂时没有句子数据
+                'reviewed': sentence_stats['reviewed'],
+                'accuracy': sentence_stats['accuracy'],
+                'avg_difficulty': sentence_stats['avg_difficulty']
             },
             'daily_progress': self._get_daily_progress()
         }
@@ -229,7 +242,7 @@ class DataManager:
     
     def _get_daily_progress(self) -> List[Dict]:
         """获取每日学习进度"""
-        daily_data = defaultdict(lambda: {'words': 0})
+        daily_data = defaultdict(lambda: {'words': 0, 'sentences': 0})
         
         # 统计单词复习记录
         for word_item in self.words.values():
@@ -237,12 +250,16 @@ class DataManager:
                 date = datetime.fromisoformat(word_item.last_review).date()
                 daily_data[date.isoformat()]['words'] += 1
         
+        # TODO: 句子数据统计（暂时设为0）
+        # 当添加句子功能时，在这里添加句子统计逻辑
+        
         # 转换为列表格式
         progress_list = []
         for date_str, counts in sorted(daily_data.items()):
             progress_list.append({
                 'date': date_str,
-                'words': counts['words']
+                'words': counts['words'],
+                'sentences': counts['sentences']  # 添加句子统计
             })
         
         return progress_list[-30:]  # 返回最近30天的数据
