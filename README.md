@@ -39,6 +39,20 @@
 
 最简单的使用方式，无需配置Python环境：
 
+**Windows用户：**
+```batch
+# 克隆项目
+git clone https://github.com/BillWang-dev/word_memorizer.git
+cd word_memorizer
+
+# 双击运行（推荐）
+docker-run-windows.bat
+
+# 或在WSL2中运行
+./docker-run-windows.sh
+```
+
+**macOS/Linux用户：**
 ```bash
 # 克隆项目
 git clone https://github.com/BillWang-dev/word_memorizer.git
@@ -47,6 +61,13 @@ cd word_memorizer
 # 一键启动（自动处理GUI和音频支持）
 ./docker-run.sh
 ```
+
+**支持的运行环境：**
+- ✅ WSL2 + Docker Desktop（Windows最佳）
+- ✅ VMware/VirtualBox Linux虚拟机（跨平台）
+- ✅ Windows + VcXsrv X11服务器（原生）
+- ✅ macOS + XQuartz（原生）
+- ✅ Linux（原生）
 
 详细说明请查看 [DOCKER.md](DOCKER.md)
 

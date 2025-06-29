@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-06-29T12:05:34.522652",
+  "timestamp": "2025-06-29T12:13:55.562103",
   "words": {
     "abandon": {
       "word": "abandon",
@@ -222,11 +222,11 @@
       "meaning": "邻近的；毗连的",
       "pronunciation": "/əˈdʒeɪsnt/",
       "difficulty": 3,
-      "review_count": 0,
+      "review_count": 1,
       "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422575",
-      "next_review": "2025-06-29T11:30:34.422576",
-      "easiness_factor": 2.5,
+      "last_review": "2025-06-29T12:13:55.562067",
+      "next_review": "2025-06-30T12:13:55.562082",
+      "easiness_factor": 1.96,
       "interval": 1
     },
     "adjust": {
