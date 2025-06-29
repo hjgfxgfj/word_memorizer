@@ -78,9 +78,6 @@ jobs:
         # 复制必要文件
         cp -r data release/
         cp README.md release/
-        cp DOCKER.md release/
-        cp MACOS-SETUP.md release/
-        cp WINDOWS-SETUP.md release/
         
         # 创建启动说明
         echo "# WordMemorizer 使用说明" > release/使用说明.txt
