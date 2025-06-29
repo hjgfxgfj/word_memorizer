@@ -1,0 +1,10 @@
+# ---- Python ----
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+# ---- IDE / OS ----
+.vscode/
+.DS_Store
+# ---- 项目数据 ----
+progress.json
