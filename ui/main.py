@@ -371,6 +371,11 @@ class StatisticsPanel:
     
     def _update_charts(self, stats: Dict):
         """更新图表显示"""
+        # 加载matplotlib
+        if not self._load_matplotlib():
+            logger.error("无法加载matplotlib，跳过图表显示")
+            return
+            
         # 清除旧图表
         if self.canvas:
             self.canvas.get_tk_widget().destroy()
@@ -465,7 +470,9 @@ class StatisticsPanel:
             ax.fill_between(dates, word_counts, alpha=0.3, color='lightblue')
             
             # 旋转x轴标签
-            plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
+            for label in ax.get_xticklabels():
+                label.set_rotation(45)
+                label.set_ha('right')
         else:
             labels_dict = self._get_labels()
             ax.text(0.5, 0.5, labels_dict['no_records'], ha='center', va='center', 
