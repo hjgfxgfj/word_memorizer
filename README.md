@@ -41,6 +41,10 @@
 
 **Windows用户：**
 ```batch
+# 第一步：安装X11服务器 (必需!)
+# 下载VcXsrv: https://sourceforge.net/projects/vcxsrv/files/vcxsrv/
+# 启动XLaunch，配置: Display=0, Multiple windows=✓, Disable access control=✓
+
 # 克隆项目
 git clone https://github.com/BillWang-dev/word_memorizer.git
 cd word_memorizer
@@ -51,6 +55,11 @@ docker-run-windows.bat
 # 或在WSL2中运行
 ./docker-run-windows.sh
 ```
+
+**⚠️ Windows重要提醒：**
+- 必须先安装并启动X11服务器（VcXsrv或Xming）
+- 确保防火墙允许X11服务器通过
+- 详细设置说明请查看 [WINDOWS-SETUP.md](WINDOWS-SETUP.md)
 
 **macOS/Linux用户：**
 ```bash

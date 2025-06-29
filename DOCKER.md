@@ -49,6 +49,22 @@ cd /mnt/c/path/to/word_memorizer
 ./docker-run-windows.sh
 ```
 
+#### ⚠️ 重要提醒：X11 服务器必需
+Windows用户必须先安装并启动X11服务器才能显示GUI：
+
+**推荐：VcXsrv**
+1. 下载安装：https://sourceforge.net/projects/vcxsrv/files/vcxsrv/
+2. 启动XLaunch，配置如下：
+   - Display number: 0
+   - Multiple windows: ✓
+   - Start no client: ✓
+   - **Disable access control: ✓** (重要！)
+3. 确保Windows防火墙允许VcXsrv通过
+
+**验证X11服务器**：
+- 检查系统托盘是否有X服务器图标
+- 运行 `netstat -an | findstr :6000` 应显示端口6000在监听
+
 #### 方式二：VMware/VirtualBox Linux虚拟机
 ```bash
 # 1. 安装 Ubuntu 20.04+ 虚拟机

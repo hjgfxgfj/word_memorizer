@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav \
     gstreamer1.0-tools \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 # 设置环境变量

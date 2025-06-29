@@ -27,6 +27,28 @@ if %errorlevel% neq 0 (
 echo ✅ Docker 环境检查通过
 echo.
 
+echo 🔍 检查 X11 服务器状态...
+netstat -an | findstr :6000 >nul 2>&1
+if %errorlevel% equ 0 (
+    echo ✅ X11 服务器正在运行 (端口 6000)
+) else (
+    echo ❌ X11 服务器未运行
+    echo.
+    echo 🚨 请先启动 X11 服务器：
+    echo    1. 下载 VcXsrv: https://sourceforge.net/projects/vcxsrv/files/vcxsrv/
+    echo    2. 安装后启动 XLaunch
+    echo    3. 配置选项：
+    echo       - Display number: 0
+    echo       - Multiple windows: ✓
+    echo       - Start no client: ✓
+    echo       - Disable access control: ✓
+    echo.
+    echo 💡 启动 VcXsrv 后请重新运行此脚本
+    pause
+    exit /b 1
+)
+echo.
+
 REM 构建Docker镜像
 echo 🔨 构建 Docker 镜像...
 docker build -t word-memorizer .
