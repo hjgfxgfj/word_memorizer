@@ -518,14 +518,6 @@ class DictationInterface:
                                variable=self.volume_var, command=self._on_volume_change)
         volume_scale.pack(side=tk.LEFT, padx=(5, 0))
         
-        # 提示区域
-        hint_frame = ttk.LabelFrame(main_frame, text="使用提示", padding="15")
-        hint_frame.pack(fill=tk.X, pady=(0, 20))
-        
-        hint_text = "💡 听取语音后，请在下方文本框中手动输入您听到的内容"
-        self.hint_label = ttk.Label(hint_frame, text=hint_text, font=('Arial', 10))
-        self.hint_label.pack()
-        
         # 答案输入区域
         answer_frame = ttk.LabelFrame(main_frame, text="答案输入", padding="15")
         answer_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
