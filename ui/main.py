@@ -281,14 +281,6 @@ class StatisticsPanel:
         self._create_stat_item(word_frame, "已复习", word_stats.get('reviewed', 0))
         self._create_stat_item(word_frame, "正确率", f"{word_stats.get('accuracy', 0):.1f}%")
         
-        # 句子统计
-        sentence_frame = ttk.LabelFrame(info_frame, text="句子统计", padding="10")
-        sentence_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
-        
-        sentence_stats = stats.get('sentences', {})
-        self._create_stat_item(sentence_frame, "总数", sentence_stats.get('total', 0))
-        self._create_stat_item(sentence_frame, "已复习", sentence_stats.get('reviewed', 0))
-        self._create_stat_item(sentence_frame, "正确率", f"{sentence_stats.get('accuracy', 0):.1f}%")
         
         # 当前会话统计
         session_frame = ttk.LabelFrame(info_frame, text="当前会话", padding="10")
@@ -320,14 +312,14 @@ class StatisticsPanel:
         ax2 = self.figure.add_subplot(222)  # 右上
         ax3 = self.figure.add_subplot(212)  # 下方整行
         
-        # 图1: 单词vs句子统计对比
-        self._create_comparison_chart(ax1, stats)
+        # 图1: 单词统计柱状图
+        self._create_word_stats_chart(ax1, stats)
         
-        # 图2: 正确率饼图
-        self._create_accuracy_pie_chart(ax2, stats)
+        # 图2: 单词正确率饼图
+        self._create_word_accuracy_chart(ax2, stats)
         
-        # 图3: 每日学习进度
-        self._create_daily_progress_chart(ax3, stats)
+        # 图3: 每日单词学习进度
+        self._create_daily_word_progress_chart(ax3, stats)
         
         self.figure.tight_layout()
         
@@ -336,71 +328,74 @@ class StatisticsPanel:
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
     
-    def _create_comparison_chart(self, ax, stats: Dict):
-        """创建对比柱状图"""
+    def _create_word_stats_chart(self, ax, stats: Dict):
+        """创建单词统计柱状图"""
         words = stats.get('words', {})
-        sentences = stats.get('sentences', {})
         
         categories = ['总数', '已复习', '正确率']
         word_values = [words.get('total', 0), words.get('reviewed', 0), words.get('accuracy', 0)]
-        sentence_values = [sentences.get('total', 0), sentences.get('reviewed', 0), sentences.get('accuracy', 0)]
         
         x = np.arange(len(categories))
-        width = 0.35
         
-        ax.bar(x - width/2, word_values, width, label='单词', color='skyblue')
-        ax.bar(x + width/2, sentence_values, width, label='句子', color='lightcoral')
+        ax.bar(x, word_values, color='skyblue', alpha=0.8)
         
-        ax.set_title('单词 vs 句子统计')
+        ax.set_title('单词学习统计')
         ax.set_xticks(x)
         ax.set_xticklabels(categories)
-        ax.legend()
         ax.grid(True, alpha=0.3)
+        
+        # 在柱状图上显示数值
+        for i, v in enumerate(word_values):
+            ax.text(i, v + max(word_values) * 0.01, str(v), ha='center', va='bottom')
     
-    def _create_accuracy_pie_chart(self, ax, stats: Dict):
-        """创建正确率饼图"""
+    def _create_word_accuracy_chart(self, ax, stats: Dict):
+        """创建单词正确率饼图"""
         words = stats.get('words', {})
-        sentences = stats.get('sentences', {})
         
         word_accuracy = words.get('accuracy', 0)
-        sentence_accuracy = sentences.get('accuracy', 0)
+        word_reviewed = words.get('reviewed', 0)
+        word_total = words.get('total', 0)
         
-        if word_accuracy > 0 or sentence_accuracy > 0:
-            labels = ['单词正确率', '句子正确率']
-            sizes = [word_accuracy, sentence_accuracy]
-            colors = ['lightblue', 'lightgreen']
+        if word_reviewed > 0:
+            correct_count = int(word_reviewed * word_accuracy / 100)
+            incorrect_count = word_reviewed - correct_count
+            
+            labels = ['正确', '错误']
+            sizes = [correct_count, incorrect_count]
+            colors = ['lightgreen', 'lightcoral']
             
             ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-            ax.set_title('学习正确率分布')
+            ax.set_title(f'单词学习正确率 ({word_accuracy:.1f}%)')
         else:
-            ax.text(0.5, 0.5, '暂无数据', ha='center', va='center', 
+            ax.text(0.5, 0.5, '暂无学习数据', ha='center', va='center', 
                    transform=ax.transAxes, fontsize=12)
-            ax.set_title('学习正确率分布')
+            ax.set_title('单词学习正确率')
     
-    def _create_daily_progress_chart(self, ax, stats: Dict):
-        """创建每日进度折线图"""
+    def _create_daily_word_progress_chart(self, ax, stats: Dict):
+        """创建每日单词学习进度折线图"""
         daily_progress = stats.get('daily_progress', [])
         
         if daily_progress:
             dates = [item['date'] for item in daily_progress[-14:]]  # 最近14天
-            word_counts = [item['words'] for item in daily_progress[-14:]]
-            sentence_counts = [item['sentences'] for item in daily_progress[-14:]]
+            word_counts = [item.get('words', 0) for item in daily_progress[-14:]]
             
-            ax.plot(dates, word_counts, marker='o', label='单词', color='blue')
-            ax.plot(dates, sentence_counts, marker='s', label='句子', color='red')
+            ax.plot(dates, word_counts, marker='o', linewidth=2, color='blue', 
+                   markersize=6, markerfacecolor='lightblue')
             
-            ax.set_title('每日学习进度 (最近14天)')
+            ax.set_title('每日单词学习进度 (最近14天)')
             ax.set_xlabel('日期')
-            ax.set_ylabel('复习数量')
-            ax.legend()
+            ax.set_ylabel('单词复习数量')
             ax.grid(True, alpha=0.3)
+            
+            # 填充区域
+            ax.fill_between(dates, word_counts, alpha=0.3, color='lightblue')
             
             # 旋转x轴标签
             plt.setp(ax.get_xticklabels(), rotation=45, ha='right')
         else:
-            ax.text(0.5, 0.5, '暂无学习记录', ha='center', va='center', 
+            ax.text(0.5, 0.5, '暂无单词学习记录', ha='center', va='center', 
                    transform=ax.transAxes, fontsize=12)
-            ax.set_title('每日学习进度')
+            ax.set_title('每日单词学习进度')
     
     def export_report(self):
         """导出统计报告"""
@@ -815,13 +810,12 @@ class MainApplication:
     def _show_help(self):
         """显示帮助"""
         help_text = """
-        英语听写与词汇记忆系统使用说明：
+        英语单词记忆系统使用说明：
         
-        1. 单词听写：播放单词发音，通过录音或手动输入进行听写
-        2. 句子听写：播放句子语音，练习长句子的听力理解
-        3. AI释义：获取单词或句子的详细解释和例句
-        4. 学习统计：查看学习进度和统计图表
-        5. 导入词书：支持CSV和JSON格式的自定义词书
+        1. 单词听写：播放单词发音，通过手动输入进行听写
+        2. AI释义：获取单词的详细解释和例句
+        3. 学习统计：查看学习进度和统计图表
+        4. 导入词书：支持CSV和JSON格式的自定义词书
         
         快捷键：
         - Ctrl+N：下一个项目
@@ -834,8 +828,8 @@ class MainApplication:
     def _show_about(self):
         """显示关于信息"""
         about_text = """
-        英语听写与词汇记忆系统
-        Word & Sentence Memorizer
+        英语单词记忆系统
+        Word Memorizer
         
         版本：1.0.0
         开发：Python课程设计项目
@@ -843,7 +837,7 @@ class MainApplication:
         功能特性：
         ✓ 智能复习调度（SM-2算法）
         ✓ 离线TTS语音合成
-        ✓ 语音识别听写
+        ✓ 单词听写练习
         ✓ AI智能释义
         ✓ 学习统计分析
         """
