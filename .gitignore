@@ -1,10 +1,61 @@
-# ---- Python ----
-venv/
+# Python bytecode and cache
 __pycache__/
 *.py[cod]
-*.pyo
-# ---- IDE / OS ----
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE files
 .vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files
 .DS_Store
-# ---- 项目数据 ----
-progress.json
+Thumbs.db
+
+# Audio cache and temporary files
+data/audio_cache.db
+data/audio/
+*.wav
+*.mp3
+*.m4a
+temp_audio_*
+
+# AI cache
+data/ai_cache.db
+
+# Logs
+*.log
+logs/
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Runtime data
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# pytest cache
+.pytest_cache/
+
+# User specific data
+user_data/
+config/user_settings.json
+
+# Temporary files
+*.tmp
+temp/

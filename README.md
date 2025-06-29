@@ -7,16 +7,26 @@
 - 📝 **智能听写**: 支持单词和句子的语音听写练习
 - 🤖 **AI释义**: 集成Deepseek API，提供详细的词汇解释和例句
 - 🔊 **离线TTS**: 使用edge-tts实现高质量语音合成
-- 🎤 **语音识别**: 支持录音识别，自动转换为文本
+- ✏️ **手动输入**: 支持手动输入模式，简化操作流程
 - 📊 **学习统计**: 可视化学习进度和统计分析
 - 🧠 **智能复习**: 基于SM-2算法的间隔重复学习
 - 💾 **数据缓存**: 智能缓存音频和AI释义，提升响应速度
 
+## 🔄 版本说明
+
+**当前版本为简化版本**，专注于核心功能：
+- ✅ TTS语音播放（edge-tts）
+- ✅ 手动文本输入模式
+- ✅ 智能评分系统
+- ✅ AI释义功能
+- ✅ 学习统计图表
+- ❌ 已移除语音识别功能（避免依赖问题）
+
 ## 🛠️ 技术栈
 
 - **GUI框架**: Tkinter + sv-ttk (现代主题)
-- **音频处理**: edge-tts, sounddevice, pygame, pydub
-- **语音识别**: SpeechRecognition
+- **音频处理**: edge-tts, pygame, pydub
+- **输入方式**: 键盘手动输入（简化版本）
 - **AI接口**: Deepseek API
 - **数据可视化**: Matplotlib
 - **数据存储**: SQLite, JSON, CSV
@@ -42,9 +52,9 @@ source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate   # Windows
 
 # 安装依赖
-pip install numpy scipy matplotlib Pillow pygame requests sv-ttk edge-tts sounddevice SpeechRecognition pydub
+pip install numpy scipy matplotlib Pillow pygame requests sv-ttk edge-tts pandas pytest aiohttp
 
-# 或者使用requirements文件（可能需要多次尝试）
+# 或者使用requirements文件
 pip install -r requirements-basic.txt
 ```
 
@@ -75,7 +85,7 @@ python scripts/build.py --py2app
 
 1. 点击"单词听写"标签页
 2. 点击"播放"按钮听取单词发音
-3. 使用录音功能或手动输入答案
+3. 在文本框中手动输入听到的单词
 4. 点击"提交答案"查看结果
 5. 可点击"AI释义"获取详细解释
 
@@ -83,7 +93,7 @@ python scripts/build.py --py2app
 
 1. 切换到"句子听写"标签页
 2. 播放句子音频
-3. 通过录音或输入完成听写
+3. 在文本框中手动输入听到的句子
 4. 系统会自动比较答案准确度
 
 ### 3. 学习统计
@@ -106,7 +116,7 @@ WordMemorizer/
 │   ├── core.py        # 词汇管理和复习调度
 │   └── ai.py          # AI释义和缓存
 ├── audio/              # 音频处理模块
-│   └── listen.py      # TTS、录音和识别
+│   └── listen.py      # TTS播放和音频缓存
 ├── ui/                 # 用户界面
 │   └── main.py        # 主界面和交互
 ├── data/               # 数据文件
@@ -199,9 +209,9 @@ python run_tests.py audio
    - 检查系统音频设备
    - 确认pygame正确安装
 
-2. **语音识别不准确**
-   - 调整麦克风音量
-   - 在安静环境中录音
+2. **GUI启动失败**
+   - 确保虚拟环境已激活
+   - 检查所有依赖是否正确安装
 
 3. **AI释义失败**
    - 检查网络连接
@@ -248,7 +258,7 @@ source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate   # Windows
 
 # 安装依赖
-pip install -r requirements.txt
+pip install -r requirements-basic.txt
 
 # 运行程序
 python ui/main.py
