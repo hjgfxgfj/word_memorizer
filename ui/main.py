@@ -7,7 +7,6 @@ This module provides:
 - Main window with tabbed interface (Word/Stats)
 - Word dictation interface with audio controls
 - Statistics panel with matplotlib charts
-- AI explanation popup windows
 - Settings and preferences
 """
 
@@ -33,186 +32,12 @@ import sv_ttk  # Sun Valley theme for modern look
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 from logic.core import MemorizerCore, WordItem
-from logic.ai import get_ai_explainer
 from audio.listen import get_listen_engine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class AIExplanationWindow:
-    """AI释义弹窗"""
-    
-    def __init__(self, parent, item: WordItem):
-        self.parent = parent
-        self.item = item
-        self.ai_explainer = get_ai_explainer()
-        self.window = None
-        self.explanation_data = None
-    
-    def show(self):
-        """显示AI释义窗口"""
-        self.window = tk.Toplevel(self.parent)
-        self.window.title("AI 智能释义")
-        self.window.geometry("600x500")
-        self.window.transient(self.parent)
-        self.window.grab_set()
-        
-        # 设置窗口图标和样式
-        self._setup_window_style()
-        
-        # 创建界面
-        self._create_widgets()
-        
-        # 异步获取AI释义
-        self._load_explanation()
-    
-    def _setup_window_style(self):
-        """设置窗口样式"""
-        self.window.configure(bg='#f0f0f0')
-        
-        # 居中显示
-        self.window.update_idletasks()
-        x = (self.window.winfo_screenwidth() // 2) - (600 // 2)
-        y = (self.window.winfo_screenheight() // 2) - (500 // 2)
-        self.window.geometry(f"600x500+{x}+{y}")
-    
-    def _create_widgets(self):
-        """创建界面组件"""
-        main_frame = ttk.Frame(self.window, padding="20")
-        main_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # 标题区域
-        title_frame = ttk.Frame(main_frame)
-        title_frame.pack(fill=tk.X, pady=(0, 20))
-        
-        title_text = f"单词: {self.item.word}"
-        subtitle_text = f"含义: {self.item.meaning}"
-        
-        title_label = ttk.Label(title_frame, text=title_text, font=('Arial', 16, 'bold'))
-        title_label.pack(anchor=tk.W)
-        
-        subtitle_label = ttk.Label(title_frame, text=subtitle_text, font=('Arial', 10))
-        subtitle_label.pack(anchor=tk.W, pady=(5, 0))
-        
-        # 内容区域
-        self.content_frame = ttk.Frame(main_frame)
-        self.content_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # 加载提示
-        self.loading_label = ttk.Label(self.content_frame, text="正在获取AI释义，请稍候...", 
-                                     font=('Arial', 12))
-        self.loading_label.pack(expand=True)
-        
-        # 按钮区域
-        button_frame = ttk.Frame(main_frame)
-        button_frame.pack(fill=tk.X, pady=(20, 0))
-        
-        ttk.Button(button_frame, text="关闭", command=self.window.destroy).pack(side=tk.RIGHT)
-        ttk.Button(button_frame, text="复制内容", command=self._copy_content).pack(side=tk.RIGHT, padx=(0, 10))
-    
-    def _load_explanation(self):
-        """异步加载AI释义"""
-        def load_task():
-            try:
-                if isinstance(self.item, WordItem):
-                    self.explanation_data = self.ai_explainer.explain_word(self.item.word)
-                else:
-                    self.explanation_data = self.ai_explainer.explain_sentence(self.item.sentence)
-                
-                # 在主线程更新UI
-                self.window.after(0, self._update_content)
-            except Exception as e:
-                logger.error(f"获取AI释义失败: {e}")
-                self.window.after(0, lambda: self._show_error(str(e)))
-        
-        threading.Thread(target=load_task, daemon=True).start()
-    
-    def _update_content(self):
-        """更新内容显示"""
-        # 清除加载提示
-        self.loading_label.destroy()
-        
-        # 创建滚动文本区域
-        text_widget = scrolledtext.ScrolledText(self.content_frame, wrap=tk.WORD, 
-                                              font=('Arial', 11), height=20)
-        text_widget.pack(fill=tk.BOTH, expand=True)
-        
-        # 显示AI释义内容
-        if isinstance(self.item, WordItem):
-            self._display_word_explanation(text_widget)
-        else:
-            self._display_sentence_explanation(text_widget)
-        
-        text_widget.config(state=tk.DISABLED)  # 设置为只读
-    
-    def _display_word_explanation(self, text_widget):
-        """显示单词释义"""
-        data = self.explanation_data
-        
-        text_widget.insert(tk.END, f"📝 单词: {data['word']}\n\n")
-        
-        if data.get('pronunciation'):
-            text_widget.insert(tk.END, f"🔊 发音: {data['pronunciation']}\n\n")
-        
-        if data.get('word_type'):
-            text_widget.insert(tk.END, f"📚 词性: {data['word_type']}\n\n")
-        
-        if data.get('meanings'):
-            text_widget.insert(tk.END, "💡 主要含义:\n")
-            for i, meaning in enumerate(data['meanings'], 1):
-                text_widget.insert(tk.END, f"  {i}. {meaning}\n")
-            text_widget.insert(tk.END, "\n")
-        
-        if data.get('examples'):
-            text_widget.insert(tk.END, "📖 例句:\n")
-            for i, example in enumerate(data['examples'], 1):
-                text_widget.insert(tk.END, f"  {i}. {example}\n")
-            text_widget.insert(tk.END, "\n")
-        
-        if data.get('synonyms'):
-            text_widget.insert(tk.END, "🔗 同义词:\n")
-            synonyms_text = ", ".join(data['synonyms'])
-            text_widget.insert(tk.END, f"  {synonyms_text}\n")
-    
-    def _display_sentence_explanation(self, text_widget):
-        """显示句子释义"""
-        data = self.explanation_data
-        
-        text_widget.insert(tk.END, "📝 原句:\n")
-        text_widget.insert(tk.END, f"{data['sentence']}\n\n")
-        
-        if data.get('translation'):
-            text_widget.insert(tk.END, "🌍 翻译:\n")
-            text_widget.insert(tk.END, f"{data['translation']}\n\n")
-        
-        if data.get('difficulty_level'):
-            text_widget.insert(tk.END, f"⭐ 难度等级: {data['difficulty_level']}/5\n\n")
-        
-        if data.get('grammar_points'):
-            text_widget.insert(tk.END, "📐 语法要点:\n")
-            for i, point in enumerate(data['grammar_points'], 1):
-                text_widget.insert(tk.END, f"  {i}. {point}\n")
-            text_widget.insert(tk.END, "\n")
-        
-        if data.get('key_words'):
-            text_widget.insert(tk.END, "🔑 关键词汇:\n")
-            for word_info in data['key_words']:
-                text_widget.insert(tk.END, f"  • {word_info.get('word', '')}: {word_info.get('meaning', '')}\n")
-                if word_info.get('usage'):
-                    text_widget.insert(tk.END, f"    用法: {word_info['usage']}\n")
-    
-    def _show_error(self, error_message):
-        """显示错误信息"""
-        self.loading_label.config(text=f"获取释义失败: {error_message}")
-    
-    def _copy_content(self):
-        """复制内容到剪贴板"""
-        if self.explanation_data:
-            content = json.dumps(self.explanation_data, ensure_ascii=False, indent=2)
-            self.window.clipboard_clear()
-            self.window.clipboard_append(content)
-            messagebox.showinfo("提示", "内容已复制到剪贴板")
 
 
 class StatisticsPanel:
@@ -734,7 +559,6 @@ class DictationInterface:
         self.core = core
         self.item_type = item_type  # "word" or "sentence"
         self.listen_engine = get_listen_engine()
-        self.ai_explainer = get_ai_explainer()
         
         self.current_item = None
         self.is_recording = False
@@ -799,7 +623,6 @@ class DictationInterface:
         self.submit_button = ttk.Button(submit_frame, text="✅ 提交答案", command=self._submit_answer)
         self.submit_button.pack(side=tk.LEFT)
         
-        ttk.Button(submit_frame, text="💡 AI释义", command=self._show_ai_explanation).pack(side=tk.LEFT, padx=(10, 0))
         
         # 结果显示区域
         self.result_frame = ttk.LabelFrame(main_frame, text="结果", padding="15")
@@ -968,13 +791,6 @@ class DictationInterface:
             logger.error(f"显示简单结果时也发生错误: {e}")
             messagebox.showinfo("结果", f"正确答案: {correct}\n你的答案: {user_answer}")
     
-    def _show_ai_explanation(self):
-        """显示AI释义"""
-        if self.current_item is None:
-            return
-        
-        explanation_window = AIExplanationWindow(self.parent_frame, self.current_item)
-        explanation_window.show()
     
     def _skip_current(self):
         """跳过当前项目"""
@@ -1021,7 +837,6 @@ class MainApplication:
         settings_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="设置", menu=settings_menu)
         settings_menu.add_command(label="音频设置", command=self._show_audio_settings)
-        settings_menu.add_command(label="AI设置", command=self._show_ai_settings)
         
         # 帮助菜单
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -1096,9 +911,6 @@ class MainApplication:
         """显示音频设置"""
         messagebox.showinfo("设置", "音频设置功能开发中...")
     
-    def _show_ai_settings(self):
-        """显示AI设置"""
-        messagebox.showinfo("设置", "AI设置功能开发中...")
     
     def _show_help(self):
         """显示帮助"""
@@ -1106,9 +918,8 @@ class MainApplication:
         英语单词记忆系统使用说明：
         
         1. 单词听写：播放单词发音，通过手动输入进行听写
-        2. AI释义：获取单词的详细解释和例句
-        3. 学习统计：查看学习进度和统计图表
-        4. 导入词书：支持CSV和JSON格式的自定义词书
+        2. 学习统计：查看学习进度和统计图表
+        3. 导入词书：支持CSV和JSON格式的自定义词书
         
         快捷键：
         - Ctrl+N：下一个项目
