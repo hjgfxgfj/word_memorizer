@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-06-29T12:14:34.649645",
+  "timestamp": "2025-06-30T09:24:55.144490",
   "words": {
     "abandon": {
       "word": "abandon",
@@ -186,12 +186,12 @@
       "meaning": "获得；习得",
       "pronunciation": "/əˈkwaɪə/",
       "difficulty": 3,
-      "review_count": 0,
-      "correct_count": 0,
-      "last_review": "2025-06-29T11:30:34.422565",
-      "next_review": "2025-06-29T11:30:34.422566",
+      "review_count": 1,
+      "correct_count": 1,
+      "last_review": "2025-06-30T09:24:48.340083",
+      "next_review": "2025-07-06T09:24:48.340111",
       "easiness_factor": 2.5,
-      "interval": 1
+      "interval": 6
     },
     "adapt": {
       "word": "adapt",
