@@ -942,7 +942,6 @@ class MainApplication:
         ✓ 智能复习调度（SM-2算法）
         ✓ 离线TTS语音合成
         ✓ 单词听写练习
-        ✓ AI智能释义
         ✓ 学习统计分析
         """
         

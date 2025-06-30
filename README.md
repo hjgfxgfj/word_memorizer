@@ -19,9 +19,6 @@
 - ✅ 智能评分系统
 - ✅ 学习统计图表
 - ✅ HTML报告导出
-- ❌ 已移除句子听写功能
-- ❌ 已移除语音识别功能（避免依赖问题）
-- ❌ 已移除AI释义功能
 
 ## 🛠️ 技术栈
 
@@ -118,14 +115,13 @@ python scripts/build.py --py2app
 2. 点击"播放"按钮听取单词发音
 3. 在文本框中手动输入听到的单词
 4. 点击"提交答案"查看结果
-5. 可点击"AI释义"获取详细解释
 
 
 ### 2. 学习统计
 
 - 查看总体学习进度
 - 分析每日学习数据
-- 导出学习报告
+- 导出HTML/JSON格式学习报告
 
 ### 3. 自定义词书
 
@@ -137,8 +133,7 @@ python scripts/build.py --py2app
 ```
 WordMemorizer/
 ├── logic/              # 核心逻辑模块
-│   ├── core.py        # 词汇管理和复习调度
-│   └── ai.py          # AI释义和缓存
+│   └── core.py        # 词汇管理和复习调度
 ├── audio/              # 音频处理模块
 │   └── listen.py      # TTS播放和音频缓存
 ├── ui/                 # 用户界面
@@ -151,14 +146,6 @@ WordMemorizer/
 ```
 
 ## 🔧 配置说明
-
-### AI API配置
-
-在`logic/ai.py`中修改以下配置：
-
-```python
-self.api_key = "your-deepseek-api-key-here"  # 替换为你的API密钥
-```
 
 ### 数据文件格式
 
@@ -196,7 +183,6 @@ python test_installation.py
 ## 📈 性能优化
 
 - **音频缓存**: 避免重复TTS生成
-- **AI缓存**: 减少API调用次数  
 - **异步处理**: 提升用户体验
 - **内存管理**: 智能清理过期缓存
 
@@ -212,11 +198,7 @@ python test_installation.py
    - 确保虚拟环境已激活
    - 检查所有依赖是否正确安装
 
-3. **AI释义失败**
-   - 检查网络连接
-   - 验证API密钥配置
-
-4. **依赖安装失败**
+3. **依赖安装失败**
    - 更新pip版本
    - 使用虚拟环境
 
@@ -233,13 +215,12 @@ python test_installation.py
 
 ## 👥 开发团队
 
-- **核心逻辑**: 词汇管理、复习调度、AI接口
+- **核心逻辑**: 词汇管理、复习调度
 - **音频引擎**: TTS合成、音频播放、缓存处理
 - **用户界面**: GUI设计、交互逻辑、数据可视化
 
 ## 🔗 相关链接
 
-- [Deepseek API文档](https://platform.deepseek.com/docs)
 - [edge-tts项目](https://github.com/rany2/edge-tts)
 - [Tkinter文档](https://docs.python.org/3/library/tkinter.html)
 
@@ -264,4 +245,4 @@ python ui/main.py
 
 ---
 
-**注意**: 使用前请确保已正确配置所有依赖和API密钥。如遇问题请参考故障排除部分或提交Issue。
+**注意**: 使用前请确保已正确配置所有依赖。如遇问题请参考故障排除部分或提交Issue。

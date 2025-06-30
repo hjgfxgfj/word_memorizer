@@ -41,27 +41,6 @@ def test_core_modules():
         print(f"❌ 核心模块测试失败: {e}")
         return False
 
-def test_ai_module():
-    """测试AI模块"""
-    print("\n🤖 测试AI模块...")
-    
-    try:
-        from logic.ai import DeepseekAPIClient, AIExplanationCache
-        print("✅ AI模块 - 成功导入")
-        
-        # 测试API客户端创建
-        client = DeepseekAPIClient("test-key")
-        print("✅ API客户端 - 创建成功")
-        
-        # 测试缓存系统
-        cache = AIExplanationCache("test_cache")
-        print("✅ 缓存系统 - 初始化成功")
-        
-        return True
-    except Exception as e:
-        print(f"❌ AI模块测试失败: {e}")
-        return False
-
 def test_audio_module():
     """测试音频模块"""
     print("\n🔊 测试音频模块...")
@@ -125,7 +104,6 @@ def main():
     
     module_tests = [
         test_core_modules,
-        test_ai_module,
         test_audio_module
     ]
     
