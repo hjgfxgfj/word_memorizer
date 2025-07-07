@@ -78,6 +78,9 @@ python3 -m venv venv
 # 激活虚拟环境
 source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate   # Windows
+#.\venv\Scripts\activate.ps1 #如果Windows识别不了source
+#Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+.\venv\Scripts\activate.ps1 #无法加载文件...未对系统签名...
 
 # 安装依赖
 pip install numpy scipy matplotlib Pillow pygame requests sv-ttk edge-tts pandas pytest aiohttp
