@@ -1,182 +1,319 @@
 #!/usr/bin/env python3
 """
-Core Logic Module for Word Memorizer
-单词记忆系统核心逻辑模块
-
-This module handles:
-- Word data management
-- Review scheduling using simplified SM-2 algorithm
-- Data persistence with JSON format
-- Progress tracking and statistics
+Core Logic Module for Word Memorizer - Enhanced Version
+精简版
 """
 
 import json
 import csv
 import random
 import heapq
-from collections import deque, Counter, defaultdict
-from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
-from pathlib import Path
+import os
 import logging
+import uuid
+from collections import deque, defaultdict
+from dataclasses import dataclass, asdict, field
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Any
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
+@dataclass
+class ReviewParameters:
+    initial_easiness: float = 2.5
+    min_easiness: float = 1.3
+    perfect_score: int = 5
+    min_quality: int = 0
+    interval_modifier: float = 1.0
+    penalty_factor: float = 0.2
+    bonus_factor: float = 0.1
+    consecutive_bonus: int = 3
 
 @dataclass
 class WordItem:
-    """单词数据结构"""
     word: str
     meaning: str
     pronunciation: str = ""
-    difficulty: int = 1  # 1-5 难度等级
+    difficulty: int = 1
     review_count: int = 0
     correct_count: int = 0
+    consecutive_correct: int = 0
     last_review: Optional[str] = None
     next_review: Optional[str] = None
-    easiness_factor: float = 2.5  # SM-2算法易度因子
-    interval: int = 1  # 复习间隔(天)
+    easiness_factor: float = 2.5
+    interval: int = 1
+    tags: List[str] = field(default_factory=list)
+    examples: List[str] = field(default_factory=list)
+    synonyms: List[str] = field(default_factory=list)
+    antonyms: List[str] = field(default_factory=list)
+    word_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     
     def __post_init__(self):
+        if not self.word or not self.meaning:
+            raise ValueError("单词和释义不能为空")
+        if self.difficulty < 1 or self.difficulty > 5:
+            raise ValueError("难度等级必须在1-5之间")
         if self.last_review is None:
             self.last_review = datetime.now().isoformat()
         if self.next_review is None:
             self.next_review = datetime.now().isoformat()
-
-
-
+        if self.easiness_factor < 1.3:
+            self.easiness_factor = 1.3
+        self.updated_at = datetime.now().isoformat()
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
 
 class ReviewScheduler:
-    """复习调度器 - 实现简化的SM-2算法"""
-    
-    def __init__(self):
+    def __init__(self, params: ReviewParameters = ReviewParameters()):
         self.words_queue = deque()
-        self.review_heap = []  # 按复习时间排序的堆
+        self.review_heap = []
+        self.params = params
+        self.session_history = []
+
+    def calculate_next_review(self, item: WordItem, quality: int) -> Tuple[int, float]:
+        if quality < self.params.min_quality or quality > self.params.perfect_score:
+            raise ValueError(f"质量评分必须在{self.params.min_quality}-{self.params.perfect_score}之间")
         
-    def calculate_next_review(self, item: WordItem, 
-                            quality: int) -> Tuple[int, float]:
-        """
-        计算下次复习时间和新的易度因子
-        quality: 0-5 (0=完全错误, 5=完全正确)
-        """
+        q_diff = self.params.perfect_score - quality
+        
         if quality < 3:
-            # 回答错误，重置间隔
-            new_interval = 1
-            new_ef = max(1.3, item.easiness_factor - 0.8 + 0.28 * quality - 0.02 * quality * quality)
+            new_interval = max(1, int(self.params.interval_modifier))
+            penalty = self.params.penalty_factor * (3 - quality)
+            new_ef = max(self.params.min_easiness, item.easiness_factor - penalty)
+            item.consecutive_correct = 0
         else:
-            # 回答正确，增加间隔
-            if item.interval == 1:
+            item.consecutive_correct += 1
+            consecutive_bonus = 1.0
+            if item.consecutive_correct >= self.params.consecutive_bonus:
+                consecutive_bonus += self.params.bonus_factor
+            
+            if item.interval <= 1:
                 new_interval = 6
             elif item.interval == 6:
                 new_interval = 14
             else:
-                new_interval = round(item.interval * item.easiness_factor)
+                new_interval = max(1, int(item.interval * item.easiness_factor * consecutive_bonus))
             
-            new_ef = item.easiness_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-            new_ef = max(1.3, new_ef)
+            ef_change = (0.1 - q_diff * (0.08 + q_diff * 0.02))
+            new_ef = max(self.params.min_easiness, item.easiness_factor + ef_change)
+        
+        new_interval = int(new_interval * self.params.interval_modifier)
+        
+        decision_log = {
+            'timestamp': datetime.now().isoformat(),
+            'word_id': item.word_id,
+            'quality': quality,
+            'old_interval': item.interval,
+            'new_interval': new_interval,
+            'old_ef': item.easiness_factor,
+            'new_ef': new_ef,
+            'consecutive': item.consecutive_correct
+        }
+        self.session_history.append(decision_log)
         
         return new_interval, new_ef
     
-    def update_item_after_review(self, item: WordItem, 
-                               is_correct: bool, quality: int = None):
-        """更新项目复习状态"""
+    def update_item_after_review(self, item: WordItem, is_correct: bool, quality: int = None):
         if quality is None:
-            quality = 4 if is_correct else 1
-            
+            quality = self.params.perfect_score if is_correct else self.params.min_quality
+        if quality < self.params.min_quality or quality > self.params.perfect_score:
+            quality = self.params.perfect_score if is_correct else self.params.min_quality
+        
         item.review_count += 1
         if is_correct:
             item.correct_count += 1
-            
+        
         new_interval, new_ef = self.calculate_next_review(item, quality)
         item.interval = new_interval
         item.easiness_factor = new_ef
         item.last_review = datetime.now().isoformat()
-        
         next_review_date = datetime.now() + timedelta(days=new_interval)
         item.next_review = next_review_date.isoformat()
+        item.updated_at = datetime.now().isoformat()
         
-        # 添加到复习堆中
-        heapq.heappush(self.review_heap, 
-                      (next_review_date.timestamp(), item))
+        heapq.heappush(self.review_heap, (next_review_date.timestamp(), item))
+        
+        review_event = {
+            'word': item.word,
+            'word_id': item.word_id,
+            'timestamp': item.last_review,
+            'correct': is_correct,
+            'quality': quality,
+            'next_review': item.next_review,
+            'interval': new_interval,
+            'easiness': new_ef
+        }
+        self.session_history.append(review_event)
     
-    def get_due_items(self) -> List[WordItem]:
-        """获取到期需要复习的项目"""
+    def get_due_items(self, limit: int = 50) -> List[WordItem]:
         due_items = []
         current_time = datetime.now().timestamp()
         
-        # 从堆中取出到期项目
-        while self.review_heap and self.review_heap[0][0] <= current_time:
+        while self.review_heap and self.review_heap[0][0] <= current_time and len(due_items) < limit:
             _, item = heapq.heappop(self.review_heap)
-            if isinstance(item, WordItem):
-                due_items.append(item)
-        
+            due_items.append(item)
         return due_items
     
-    def shuffle_queue(self):
-        """随机打乱队列顺序"""
+    def shuffle_queue(self, method: str = "random"):
+        if not self.words_queue:
+            return
+            
         queue_list = list(self.words_queue)
-        random.shuffle(queue_list)
+        if method == "random":
+            random.shuffle(queue_list)
+        elif method == "difficulty":
+            queue_list.sort(key=lambda x: x.difficulty, reverse=True)
+        elif method == "performance":
+            queue_list.sort(key=lambda x: x.correct_count / x.review_count if x.review_count > 0 else 0)
+        elif method == "interval":
+            queue_list.sort(key=lambda x: x.interval)
         self.words_queue = deque(queue_list)
-
+    
+    def clear_history(self):
+        self.session_history = []
+    
+    def get_review_history(self) -> List[Dict]:
+        return self.session_history
 
 class DataManager:
-    """数据管理器 - 处理词汇的I/O操作"""
-    
-    def __init__(self, data_dir: str = "data"):
+    def __init__(self, data_dir: str = "data", backup_count: int = 5):
         self.data_dir = Path(data_dir)
-        self.data_dir.mkdir(exist_ok=True)
-        
+        self.data_dir.mkdir(exist_ok=True, parents=True)
+        self.backup_count = backup_count
         self.words: Dict[str, WordItem] = {}
+        self.word_id_index: Dict[str, WordItem] = {}
         self.progress_file = self.data_dir / "progress.json"
+        self.backup_dir = self.data_dir / "backups"
+        self.backup_dir.mkdir(exist_ok=True)
+        self.stats_file = self.data_dir / "statistics.json"
+        self.import_history_file = self.data_dir / "import_history.csv"
         
-    def load_words_from_csv(self, csv_file: str) -> int:
-        """从CSV文件加载单词"""
+    def _create_backup(self, file_path: Path):
+        if not file_path.exists():
+            return
+        backups = sorted(self.backup_dir.glob(f"{file_path.stem}_backup_*"), 
+                         key=os.path.getmtime, reverse=True)
+        for old_backup in backups[self.backup_count - 1:]:
+            old_backup.unlink()
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_file = self.backup_dir / f"{file_path.stem}_backup_{timestamp}{file_path.suffix}"
+        with open(file_path, 'rb') as src, open(backup_file, 'wb') as dst:
+            dst.write(src.read())
+    
+    def _validate_word_data(self, row: Dict) -> bool:
+        required_fields = ['word', 'meaning']
+        for field in required_fields:
+            if field not in row or not row[field].strip():
+                return False
+        return True
+    
+    def load_words_from_csv(self, csv_file: str, source: str = "unknown") -> int:
         csv_path = self.data_dir / csv_file
         if not csv_path.exists():
             logger.warning(f"CSV文件不存在: {csv_path}")
             return 0
             
         count = 0
+        new_words = 0
+        updated_words = 0
         try:
             with open(csv_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
-                for row in reader:
+                for row_num, row in enumerate(reader, 1):
+                    if not self._validate_word_data(row):
+                        logger.warning(f"第{row_num}行数据不完整，跳过")
+                        continue
+                    
+                    word = row['word'].strip()
+                    meaning = row['meaning'].strip()
+                    
+                    if word in self.words:
+                        existing = self.words[word]
+                        existing.meaning = meaning
+                        existing.pronunciation = row.get('pronunciation', existing.pronunciation)
+                        existing.difficulty = int(row.get('difficulty', existing.difficulty))
+                        existing.tags = row.get('tags', '').split(',') if 'tags' in row else existing.tags
+                        existing.updated_at = datetime.now().isoformat()
+                        updated_words += 1
+                        continue
+                    
                     word_item = WordItem(
-                        word=row['word'],
-                        meaning=row['meaning'],
+                        word=word,
+                        meaning=meaning,
                         pronunciation=row.get('pronunciation', ''),
-                        difficulty=int(row.get('difficulty', 1))
+                        difficulty=int(row.get('difficulty', 1)),
+                        tags=row.get('tags', '').split(',') if 'tags' in row else []
                     )
-                    self.words[word_item.word] = word_item
+                    
+                    if 'examples' in row:
+                        examples = [ex.strip() for ex in row['examples'].split(';') if ex.strip()]
+                        word_item.examples = examples
+                    if 'synonyms' in row:
+                        synonyms = [syn.strip() for syn in row['synonyms'].split(',') if syn.strip()]
+                        word_item.synonyms = synonyms
+                    if 'antonyms' in row:
+                        antonyms = [ant.strip() for ant in row['antonyms'].split(',') if ant.strip()]
+                        word_item.antonyms = antonyms
+                    
+                    self.words[word] = word_item
+                    self.word_id_index[word_item.word_id] = word_item
                     count += 1
+                    new_words += 1
+            
+            self._record_import_event(csv_file, source, new_words, updated_words)
+            logger.info(f"成功导入 {count} 个单词 (新增: {new_words}, 更新: {updated_words})")
+            return count
         except Exception as e:
             logger.error(f"加载CSV文件失败: {e}")
-            
-        logger.info(f"成功加载 {count} 个单词")
-        return count
+            return 0
     
+    def _record_import_event(self, filename: str, source: str, new_words: int, updated_words: int):
+        if not self.import_history_file.exists():
+            with open(self.import_history_file, 'w', encoding='utf-8', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['timestamp', 'filename', 'source', 'new_words', 'updated_words', 'total_words'])
+        
+        with open(self.import_history_file, 'a', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                datetime.now().isoformat(),
+                filename,
+                source,
+                new_words,
+                updated_words,
+                len(self.words)
+            ])
     
     def save_progress(self) -> bool:
-        """保存学习进度"""
         try:
+            if self.progress_file.exists():
+                self._create_backup(self.progress_file)
+            
             progress_data = {
+                'version': '2.0',
                 'timestamp': datetime.now().isoformat(),
-                'words': {k: asdict(v) for k, v in self.words.items()}
+                'word_count': len(self.words),
+                'words': {k: v.to_dict() for k, v in self.words.items()}
             }
             
             with open(self.progress_file, 'w', encoding='utf-8') as f:
                 json.dump(progress_data, f, ensure_ascii=False, indent=2)
-                
-            logger.info("学习进度已保存")
+            self.save_statistics()
+            logger.info(f"学习进度已保存 ({len(self.words)}个单词)")
             return True
         except Exception as e:
             logger.error(f"保存进度失败: {e}")
             return False
     
     def load_progress(self) -> bool:
-        """加载学习进度"""
         if not self.progress_file.exists():
             logger.info("进度文件不存在，使用默认数据")
             return False
@@ -184,170 +321,263 @@ class DataManager:
         try:
             with open(self.progress_file, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                
-            # 恢复单词数据
+            
+            self.words.clear()
+            self.word_id_index.clear()
+            
             for word, word_data in data.get('words', {}).items():
-                self.words[word] = WordItem(**word_data)
-                
+                try:
+                    word_item = WordItem(**word_data)
+                    self.words[word] = word_item
+                    self.word_id_index[word_item.word_id] = word_item
+                except Exception as e:
+                    logger.error(f"加载单词 '{word}' 失败: {e}")
             logger.info(f"成功加载进度: {len(self.words)}个单词")
             return True
         except Exception as e:
             logger.error(f"加载进度失败: {e}")
             return False
     
+    def save_statistics(self):
+        stats = self.get_statistics()
+        try:
+            with open(self.stats_file, 'w', encoding='utf-8') as f:
+                json.dump(stats, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.error(f"保存统计信息失败: {e}")
+    
     def get_statistics(self) -> Dict:
-        """获取学习统计信息"""
         word_stats = self._calculate_item_stats(self.words.values())
+        difficulty_stats = self._get_difficulty_stats()
+        tag_stats = self._get_tag_stats()
+        retention_rates = self._get_retention_rates()
         
         return {
             'words': {
                 'total': len(self.words),
                 'reviewed': word_stats['reviewed'],
+                'unreviewed': len(self.words) - word_stats['reviewed'],
                 'accuracy': word_stats['accuracy'],
-                'avg_difficulty': word_stats['avg_difficulty']
+                'avg_difficulty': word_stats['avg_difficulty'],
+                'avg_interval': word_stats['avg_interval'],
+                'avg_ef': word_stats['avg_ef']
             },
-            'daily_progress': self._get_daily_progress()
+            'difficulty': difficulty_stats,
+            'tags': tag_stats,
+            'retention': retention_rates,
+            'daily_progress': self._get_daily_progress(),
+            'last_updated': datetime.now().isoformat()
         }
     
     def _calculate_item_stats(self, items) -> Dict:
-        """计算项目统计信息"""
         if not items:
-            return {'reviewed': 0, 'accuracy': 0.0, 'avg_difficulty': 0.0}
+            return {'reviewed': 0, 'accuracy': 0.0, 'avg_difficulty': 0.0, 'avg_interval': 0.0, 'avg_ef': 0.0}
             
         reviewed_items = [item for item in items if item.review_count > 0]
         total_reviews = sum(item.review_count for item in items)
         total_correct = sum(item.correct_count for item in items)
+        total_interval = sum(item.interval for item in reviewed_items)
+        total_ef = sum(item.easiness_factor for item in reviewed_items)
         
         accuracy = (total_correct / total_reviews * 100) if total_reviews > 0 else 0
         avg_difficulty = sum(item.difficulty for item in items) / len(items)
+        avg_interval = total_interval / len(reviewed_items) if reviewed_items else 0
+        avg_ef = total_ef / len(reviewed_items) if reviewed_items else 0
         
         return {
             'reviewed': len(reviewed_items),
+            'unreviewed': len(items) - len(reviewed_items),
             'accuracy': round(accuracy, 2),
-            'avg_difficulty': round(avg_difficulty, 2)
+            'avg_difficulty': round(avg_difficulty, 2),
+            'avg_interval': round(avg_interval, 2),
+            'avg_ef': round(avg_ef, 2)
         }
     
-    def _get_daily_progress(self) -> List[Dict]:
-        """获取每日学习进度"""
-        daily_data = defaultdict(lambda: {'words': 0})
+    def _get_difficulty_stats(self) -> Dict[int, Dict]:
+        difficulty_groups = defaultdict(list)
+        for item in self.words.values():
+            difficulty_groups[item.difficulty].append(item)
         
-        # 统计单词复习记录
+        stats = {}
+        for level, items in difficulty_groups.items():
+            level_stats = self._calculate_item_stats(items)
+            level_stats['count'] = len(items)
+            stats[level] = level_stats
+        return stats
+    
+    def _get_tag_stats(self) -> Dict[str, Dict]:
+        tag_groups = defaultdict(list)
+        for item in self.words.values():
+            for tag in item.tags:
+                tag_groups[tag].append(item)
+        
+        stats = {}
+        for tag, items in tag_groups.items():
+            tag_stats = self._calculate_item_stats(items)
+            tag_stats['count'] = len(items)
+            stats[tag] = tag_stats
+        return stats
+    
+    def _get_retention_rates(self) -> Dict[int, float]:
+        interval_groups = defaultdict(lambda: {'correct': 0, 'total': 0})
+        for item in self.words.values():
+            if item.review_count > 0:
+                interval = item.interval
+                interval_groups[interval]['correct'] += item.correct_count
+                interval_groups[interval]['total'] += item.review_count
+        
+        retention_rates = {}
+        for interval, counts in sorted(interval_groups.items()):
+            if counts['total'] > 0:
+                rate = counts['correct'] / counts['total'] * 100
+                retention_rates[interval] = round(rate, 2)
+        return retention_rates
+    
+    def _get_daily_progress(self, days: int = 30) -> List[Dict]:
+        daily_data = defaultdict(lambda: {'words': 0, 'correct': 0, 'total': 0})
         for word_item in self.words.values():
             if word_item.last_review:
                 date = datetime.fromisoformat(word_item.last_review).date()
                 daily_data[date.isoformat()]['words'] += 1
         
-        # 转换为列表格式
         progress_list = []
-        for date_str, counts in sorted(daily_data.items()):
+        today = datetime.now().date()
+        for i in range(days):
+            date = today - timedelta(days=i)
+            date_str = date.isoformat()
+            data = daily_data.get(date_str, {'words': 0, 'correct': 0, 'total': 0})
+            accuracy = (data['correct'] / data['total'] * 100) if data['total'] > 0 else 0
             progress_list.append({
                 'date': date_str,
-                'words': counts['words']
+                'words': data['words'],
+                'correct': data['correct'],
+                'total': data['total'],
+                'accuracy': accuracy
             })
-        
-        return progress_list[-30:]  # 返回最近30天的数据
+        return sorted(progress_list, key=lambda x: x['date'])
     
-    def get_error_prone_items(self, limit: int = 10) -> List[WordItem]:
-        """获取容易出错的项目"""
-        word_errors = [(item, self._calculate_error_rate(item)) 
-                      for item in self.words.values() if item.review_count > 0]
-        word_errors.sort(key=lambda x: x[1], reverse=True)
-        error_items = [item for item, _ in word_errors[:limit]]
-        
-        return error_items
+    def get_word_by_id(self, word_id: str) -> Optional[WordItem]:
+        return self.word_id_index.get(word_id)
     
-    def _calculate_error_rate(self, item: WordItem) -> float:
-        """计算错误率"""
-        if item.review_count == 0:
-            return 0.0
-        return (item.review_count - item.correct_count) / item.review_count
-
+    def update_word_item(self, word_id: str, **kwargs) -> bool:
+        item = self.word_id_index.get(word_id)
+        if not item:
+            return False
+        for key, value in kwargs.items():
+            if hasattr(item, key):
+                setattr(item, key, value)
+        item.updated_at = datetime.now().isoformat()
+        return True
+    
+    def add_custom_word(self, word: str, meaning: str, **kwargs) -> bool:
+        if word in self.words:
+            return False
+        word_item = WordItem(word=word, meaning=meaning, **kwargs)
+        self.words[word] = word_item
+        self.word_id_index[word_item.word_id] = word_item
+        return True
 
 class MemorizerCore:
-    """记忆系统核心类 - 整合所有功能"""
-    
-    def __init__(self, data_dir: str = "data"):
+    def __init__(self, data_dir: str = "data", review_params: ReviewParameters = None):
         self.data_manager = DataManager(data_dir)
-        self.scheduler = ReviewScheduler()
+        self.review_params = review_params or ReviewParameters()
+        self.scheduler = ReviewScheduler(self.review_params)
         self.current_session = {
-            'start_time': datetime.now(),
+            'session_id': str(uuid.uuid4()),
+            'start_time': datetime.now().isoformat(),
+            'end_time': None,
             'words_reviewed': 0,
             'correct_answers': 0,
-            'total_answers': 0
+            'total_answers': 0,
+            'words': []
+        }
+        self.user_preferences = {
+            'new_words_per_day': 20,
+            'review_limit': 100,
+            'shuffle_method': 'random',
+            'difficulty_weight': 1.0
         }
     
     def initialize(self) -> bool:
-        """初始化系统"""
-        # 加载进度或创建示例数据
         if not self.data_manager.load_progress():
-            self.data_manager.load_words_from_csv("words_cet6.csv")
-        
-        # 初始化复习队列
+            if not self.data_manager.load_words_from_csv("words_cet6.csv", "system"):
+                logger.warning("初始化示例词库失败")
         self._initialize_review_queues()
+        logger.info(f"记忆系统初始化完成，共加载 {len(self.data_manager.words)} 个单词")
         return True
     
     def _initialize_review_queues(self):
-        """初始化复习队列"""
-        # 添加到期的项目到队列
+        self.scheduler.words_queue.clear()
+        self.scheduler.review_heap = []
         current_time = datetime.now()
+        due_items = []
         
         for word in self.data_manager.words.values():
             next_review = datetime.fromisoformat(word.next_review)
             if next_review <= current_time:
-                self.scheduler.words_queue.append(word)
+                due_items.append(word)
             else:
-                heapq.heappush(self.scheduler.review_heap, 
-                              (next_review.timestamp(), word))
+                heapq.heappush(self.scheduler.review_heap, (next_review.timestamp(), word))
         
-        # 随机打乱队列
-        self.scheduler.shuffle_queue()
+        if self.user_preferences['shuffle_method'] == 'difficulty':
+            due_items.sort(key=lambda x: x.difficulty * self.user_preferences['difficulty_weight'], reverse=True)
+        elif self.user_preferences['shuffle_method'] == 'performance':
+            due_items.sort(key=lambda x: x.correct_count / x.review_count if x.review_count > 0 else 0)
+        else:
+            random.shuffle(due_items)
+        
+        due_items = due_items[:self.user_preferences['review_limit']]
+        self.scheduler.words_queue = deque(due_items)
     
-    def get_next_review_item(self, item_type: str = "word") -> Optional[WordItem]:
-        """获取下一个复习项目"""
+    # 修复：添加 *args 和 **kwargs 以兼容不同调用方式
+    def get_next_review_item(self, *args, **kwargs) -> Optional[WordItem]:
         if self.scheduler.words_queue:
-            return self.scheduler.words_queue.popleft()
-        
+            item = self.scheduler.words_queue.popleft()
+            self.current_session['words'].append(item.word_id)
+            return item
         return None
     
-    def submit_answer(self, item: WordItem, 
-                     is_correct: bool, quality: int = None):
-        """提交答案并更新学习状态"""
+    def submit_answer(self, item: WordItem, is_correct: bool, quality: int = None):
         self.scheduler.update_item_after_review(item, is_correct, quality)
-        
-        # 更新会话统计
         self.current_session['total_answers'] += 1
         if is_correct:
             self.current_session['correct_answers'] += 1
-        
         self.current_session['words_reviewed'] += 1
-        
-        # 自动保存进度
         self.data_manager.save_progress()
     
+    def end_session(self):
+        self.current_session['end_time'] = datetime.now().isoformat()
+        self.scheduler.clear_history()
+    
     def get_session_stats(self) -> Dict:
-        """获取当前会话统计"""
-        session_time = datetime.now() - self.current_session['start_time']
+        if self.current_session['end_time']:
+            session_time = datetime.fromisoformat(self.current_session['end_time']) - \
+                          datetime.fromisoformat(self.current_session['start_time'])
+        else:
+            session_time = datetime.now() - datetime.fromisoformat(self.current_session['start_time'])
+        
         accuracy = 0
         if self.current_session['total_answers'] > 0:
             accuracy = self.current_session['correct_answers'] / self.current_session['total_answers'] * 100
         
         return {
-            'session_time': str(session_time).split('.')[0],  # 去掉微秒
+            'session_id': self.current_session['session_id'],
+            'start_time': self.current_session['start_time'],
+            'end_time': self.current_session['end_time'],
+            'session_duration': str(session_time).split('.')[0],
             'words_reviewed': self.current_session['words_reviewed'],
-            'total_reviewed': self.current_session['total_answers'],
+            'total_answers': self.current_session['total_answers'],
             'accuracy': round(accuracy, 2),
             'remaining_words': len(self.scheduler.words_queue)
         }
     
     def get_overall_stats(self) -> Dict:
-        """获取总体统计信息"""
         return self.data_manager.get_statistics()
     
-    def import_custom_wordbook(self, file_path: str, file_type: str) -> bool:
-        """导入自定义词书"""
+    def import_custom_wordbook(self, file_path: str, file_type: str, source: str = "user") -> bool:
         try:
             if file_type.lower() == 'csv':
-                count = self.data_manager.load_words_from_csv(file_path)
+                count = self.data_manager.load_words_from_csv(file_path, source)
             else:
                 logger.error(f"不支持的文件类型: {file_type}")
                 return False
@@ -360,32 +590,56 @@ class MemorizerCore:
         except Exception as e:
             logger.error(f"导入词书失败: {e}")
             return False
-
+    
+    def add_custom_word(self, word: str, meaning: str, **kwargs) -> bool:
+        success = self.data_manager.add_custom_word(word, meaning, **kwargs)
+        if success:
+            self._initialize_review_queues()
+            self.data_manager.save_progress()
+        return success
+    
+    def update_user_preferences(self, **prefs):
+        valid_keys = ['new_words_per_day', 'review_limit', 'shuffle_method', 'difficulty_weight']
+        for key, value in prefs.items():
+            if key in valid_keys:
+                self.user_preferences[key] = value
+        self._initialize_review_queues()
 
 if __name__ == "__main__":
-    # 测试核心功能
-    core = MemorizerCore()
+    print("=== 单词记忆系统增强版测试 ===")
+    core = MemorizerCore(data_dir="test_data")
     core.initialize()
     
-    print("=== 词汇记忆系统测试 ===")
-    print(f"总体统计: {core.get_overall_stats()}")
-    print(f"会话统计: {core.get_session_stats()}")
+    print("\n系统统计信息:")
+    stats = core.get_overall_stats()
+    print(f"总单词数: {stats['words']['total']}")
+    print(f"已复习: {stats['words']['reviewed']}")
+    print(f"平均准确率: {stats['words']['accuracy']}%")
     
-    # 模拟复习流程
+    print("\n模拟复习流程:")
     for i in range(5):
         item = core.get_next_review_item()
         if item:
             print(f"\n复习项目 {i+1}:")
-            if isinstance(item, WordItem):
-                print(f"单词: {item.word} - {item.meaning}")
-            else:
-                print(f"句子: {item.sentence[:50]}...")
-            
-            # 模拟用户回答
-            is_correct = random.choice([True, False])
+            print(f"单词: {item.word} - {item.meaning}")
+            is_correct = random.random() > 0.3
             core.submit_answer(item, is_correct)
             print(f"回答: {'正确' if is_correct else '错误'}")
         else:
+            print("没有更多复习项目")
             break
     
-    print(f"\n最终会话统计: {core.get_session_stats()}")
+    print("\n会话统计:")
+    session_stats = core.get_session_stats()
+    for key, value in session_stats.items():
+        print(f"{key}: {value}")
+    
+    print("\n添加自定义单词:")
+    success = core.add_custom_word("ephemeral", "短暂的，瞬息的", 
+                                pronunciation="ɪˈfemərəl", 
+                                difficulty=4,
+                                tags=["literary", "advanced"])
+    print("成功添加单词 'ephemeral'" if success else "添加单词失败")
+    
+    core.end_session()
+    print("\n测试完成")
